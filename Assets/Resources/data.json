@@ -1,0 +1,41 @@
+{
+    "globals": {
+        "gameVariables": {}
+    },
+    "controllers": [
+        {
+            "type": "Controller2D",
+            "description": "Move Pad"
+        },
+        {
+            "type": "ControllerButton",
+            "description": "Jump Button (M)",
+            "keyCode": "M"
+        }
+    ],
+    "entities": [
+        {
+            "position": [
+                0,
+                0
+            ],
+            "components": [
+                {
+                    "type": "Movable",
+                    "moveSpeed": 2,
+                    "listenTo": 0
+                },
+                {
+                    "type": "Jumpable",
+                    "jumpForce": 5,
+                    "listenTo": 1
+                },
+                {
+                    "type": "Gravity",
+                    "gravityScale": 1.0
+                }
+            ]
+        }
+    ],
+    "ui": []
+}
