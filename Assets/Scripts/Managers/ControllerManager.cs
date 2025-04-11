@@ -30,6 +30,8 @@ public class ControllerManager : MonoBehaviour
 
     public T GetControllerByIndex<T>(int index) where T : Controller
     {
+        if (index < 0 || index >= controllers.Count) return null;
+
         Controller controller = controllers[index];
 
         if (controller == null) return null;

@@ -1,41 +1,66 @@
 {
-    "globals": {
-        "gameVariables": {}
+  "entities": [
+    {
+      "name": "Player", "position": [0, 0], "tags": ["Player"], "color": "#00BFFF",
+      "components": [
+        { "type": "Movable", "moveSpeed": 4.0, "listenTo": 0 },
+        { "type": "Jumpable", "jumpForce": 10.0, "listenTo": 1 },
+        { "type": "Gravity", "gravityScale": 1.0 },
+        { "type": "Rotatable", "faceMovement": true, "turnSpeed": -1 },
+        { "type": "Stats", "values": { "HP": 5, "Score": 0 } },
+        { "type": "EffectReceiverStat" },
+        { "type": "EffectReceiverKnockback" },
+        { "type": "LoseIf", "trigger": "onStatChanged", "stat": "HP", "operator": "lessThanOrEqual", "value": 0 },
+        { "type": "WinIf", "trigger": "onStatChanged", "stat": "Score", "operator": "greaterThanOrEqual", "value": 10 },
+        { "type": "CameraTarget" }
+      ]
     },
-    "controllers": [
+    { "presetId": "ground", "position": [0, -2] },
+    { "presetId": "monster", "position": [4, 0] },
+    { "presetId": "monster", "position": [-4, 0] }
+  ],
+  "presets": {
+    "ground": {
+      "name": "Ground", "color": "#808080",
+      "components": [{ "type": "Immovable" }]
+    },
+    "enemyBullet": {
+      "name": "Enemy Bullet", "tags": ["Projectile"], "color": "#FFAA00",
+      "components": [
+        { "type": "Movable", "moveSpeed": 6.0, "listenTo": 0 },
+        { "type": "Projectile" },
         {
-            "type": "Controller2D",
-            "description": "Move Pad"
+          "type": "EffectOnHit", "targetTags": ["Player"],
+          "effects": [{ "type": "stat", "key": "HP", "value": -1 }]
+        }
+      ]
+    },
+    "monster": {
+      "name": "Enemy", "color": "#FF4444", "tags": ["Enemy"],
+      "components": [
+        { "type": "Stats", "values": { "HP": 3 } },
+        { "type": "EffectReceiverStat" },
+        {
+          "type": "Shooter",
+          "projectilePresetId": "enemyBullet",
+          "listenTo": 1,  // 점프 컨트롤러와 동일
+          "shootDirection": "fromSelf",
+          "directionSpace": "world"
         },
         {
-            "type": "ControllerButton",
-            "description": "Jump Button (M)",
-            "keyCode": "M"
+          "type": "DestroyIf",
+          "trigger": "onStatChanged",
+          "stat": "HP",
+          "operator": "lessThanOrEqual",
+          "value": 0
         }
-    ],
-    "entities": [
-        {
-            "position": [
-                0,
-                0
-            ],
-            "components": [
-                {
-                    "type": "Movable",
-                    "moveSpeed": 2,
-                    "listenTo": 0
-                },
-                {
-                    "type": "Jumpable",
-                    "jumpForce": 5,
-                    "listenTo": 1
-                },
-                {
-                    "type": "Gravity",
-                    "gravityScale": 1.0
-                }
-            ]
-        }
-    ],
-    "ui": []
+      ]
+    }
+  },
+  "controllers": [
+    { "type": "Controller2D", "description": "Move Left/Right" },
+    { "type": "ControllerButton", "description": "Jump", "keyCode": "Space" },
+    { "type": "ControllerButton", "description": "Unused", "keyCode": "Z" }
+  ],
+  "camera": { "fov": 5.0 }
 }

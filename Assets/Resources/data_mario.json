@@ -1,0 +1,412 @@
+{
+    "controllers": [
+        {
+            "type": "Controller2D",
+            "description": "Move"
+        },
+        {
+            "type": "ControllerButton",
+            "description": "Jump",
+            "keyCode": "Space"
+        },
+        {
+            "type": "ControllerButton",
+            "description": "Shoot",
+            "keyCode": "LeftControl"
+        }
+    ],
+    "camera": {
+        "fov": 5.0
+    },
+    "presets": {
+        "platform": {
+            "name": "Ground Platform",
+            "tags": [
+                "Ground"
+            ],
+            "color": "#8B4513",
+            "components": [
+                {
+                    "type": "Immovable"
+                }
+            ]
+        },
+        "item": {
+            "name": "Coin Item",
+            "tags": [
+                "Item"
+            ],
+            "color": "#FFD700",
+            "components": [
+                {
+                    "type": "Immovable"
+                },
+                {
+                    "type": "EffectOnHit",
+                    "targetTags": [
+                        "Player"
+                    ],
+                    "effects": [
+                        {
+                            "type": "stat",
+                            "key": "coin",
+                            "value": 1
+                        }
+                    ]
+                },
+                {
+                    "type": "DestroyIf",
+                    "trigger": "onEffectGiven"
+                }
+            ]
+        },
+        "bullet": {
+            "name": "Player Bullet",
+            "color": "#FFFF00",
+            "tags": [
+                "Projectile"
+            ],
+            "components": [
+                {
+                    "type": "Movable",
+                    "moveSpeed": 10.0,
+                    "listenTo": 0
+                },
+                {
+                    "type": "Projectile"
+                },
+                {
+                    "type": "EffectOnHit",
+                    "targetTags": [
+                        "Enemy"
+                    ],
+                    "effects": [
+                        {
+                            "type": "stat",
+                            "key": "HP",
+                            "value": -1
+                        },
+                        {
+                            "type": "knockback",
+                            "force": 2.0,
+                            "direction": "fromSelf",
+                            "space": "world"
+                        }
+                    ]
+                },
+                {
+                    "type": "DestroyIf",
+                    "trigger": "onEffectGiven"
+                }
+            ]
+        },
+        "monster": {
+            "name": "Enemy",
+            "tags": [
+                "Enemy"
+            ],
+            "color": "#FF0000",
+            "components": [
+                {
+                    "type": "Stats",
+                    "values": {
+                        "HP": 2
+                    }
+                },
+                {
+                    "type": "EffectReceiverStat"
+                },
+                {
+                    "type": "EffectReceiverKnockback"
+                },
+                {
+                    "type": "DestroyIf",
+                    "trigger": "onStatChanged",
+                    "stat": "HP",
+                    "operator": "lessThanOrEqual",
+                    "value": 0
+                },
+                {
+                    "type": "EffectOnHit",
+                    "targetTags": [
+                        "Player"
+                    ],
+                    "effects": [
+                        {
+                            "type": "stat",
+                            "key": "HP",
+                            "value": -1
+                        },
+                        {
+                            "type": "knockback",
+                            "force": 5.0,
+                            "direction": "fromSelf",
+                            "space": "world"
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    "entities": [
+        {
+            "name": "Player",
+            "position": [
+                0,
+                1
+            ],
+            "tags": [
+                "Player"
+            ],
+            "color": "#00BFFF",
+            "components": [
+                {
+                    "type": "Stats",
+                    "values": {
+                        "HP": 5,
+                        "coin": 0,
+                        "lives": 3,
+                        "Timer": 30
+                    }
+                },
+                {
+                    "type": "EffectReceiverStat"
+                },
+                {
+                    "type": "EffectReceiverKnockback"
+                },
+                {
+                    "type": "Movable",
+                    "moveSpeed": 4.0,
+                    "listenTo": 0
+                },
+                {
+                    "type": "Jumpable",
+                    "jumpForce": 10.0,
+                    "listenTo": 1
+                },
+                {
+                    "type": "Gravity",
+                    "gravityScale": 1.0
+                },
+                {
+                    "type": "Rotatable",
+                    "faceMovement": true,
+                    "turnSpeed": -1.0
+                },
+                {
+                    "type": "CameraTarget"
+                },
+                {
+                    "type": "Shooter",
+                    "projectilePresetId": "bullet",
+                    "listenTo": 2,
+                    "shootDirection": "facing",
+                    "directionSpace": "world"
+                },
+                {
+                    "type": "StatOverTime",
+                    "stat": "Timer",
+                    "amountPerSecond": -1,
+                    "interval": 1.0
+                },
+                {
+                    "type": "WinIf",
+                    "trigger": "onStatChanged",
+                    "stat": "coin",
+                    "operator": "greaterThanOrEqual",
+                    "value": 5
+                },
+                {
+                    "type": "LoseIf",
+                    "trigger": "onStatChanged",
+                    "stat": "Timer",
+                    "operator": "lessThanOrEqual",
+                    "value": 0
+                },
+                {
+                    "type": "LoseIf",
+                    "trigger": "onStatChanged",
+                    "stat": "lives",
+                    "operator": "lessThanOrEqual",
+                    "value": 0
+                },
+                {
+                    "type": "DestroyIf",
+                    "trigger": "onStatChanged",
+                    "stat": "HP",
+                    "operator": "lessThanOrEqual",
+                    "value": 0
+                }
+            ]
+        },
+        {
+            "presetId": "platform",
+            "position": [
+                -5,
+                0
+            ]
+        },
+        {
+            "presetId": "platform",
+            "position": [
+                -4,
+                0
+            ]
+        },
+        {
+            "presetId": "platform",
+            "position": [
+                -3,
+                0
+            ]
+        },
+        {
+            "presetId": "platform",
+            "position": [
+                -2,
+                0
+            ]
+        },
+        {
+            "presetId": "platform",
+            "position": [
+                -1,
+                0
+            ]
+        },
+        {
+            "presetId": "platform",
+            "position": [
+                0,
+                0
+            ]
+        },
+        {
+            "presetId": "platform",
+            "position": [
+                1,
+                0
+            ]
+        },
+        {
+            "presetId": "platform",
+            "position": [
+                2,
+                0
+            ]
+        },
+        {
+            "presetId": "platform",
+            "position": [
+                3,
+                0
+            ]
+        },
+        {
+            "presetId": "platform",
+            "position": [
+                4,
+                0
+            ]
+        },
+        {
+            "presetId": "platform",
+            "position": [
+                5,
+                0
+            ]
+        },
+        {
+            "presetId": "platform",
+            "position": [
+                6,
+                0
+            ]
+        },
+        {
+            "presetId": "platform",
+            "position": [
+                7,
+                0
+            ]
+        },
+        {
+            "presetId": "platform",
+            "position": [
+                8,
+                0
+            ]
+        },
+        {
+            "presetId": "platform",
+            "position": [
+                9,
+                0
+            ]
+        },
+        {
+            "presetId": "platform",
+            "position": [
+                10,
+                0
+            ]
+        },
+        {
+            "presetId": "item",
+            "position": [
+                -4,
+                2
+            ]
+        },
+        {
+            "presetId": "item",
+            "position": [
+                0,
+                2
+            ]
+        },
+        {
+            "presetId": "item",
+            "position": [
+                3,
+                2
+            ]
+        },
+        {
+            "presetId": "item",
+            "position": [
+                6,
+                2
+            ]
+        },
+        {
+            "presetId": "item",
+            "position": [
+                9,
+                2
+            ]
+        },
+        {
+            "presetId": "monster",
+            "position": [
+                2,
+                1
+            ]
+        },
+        {
+            "presetId": "monster",
+            "position": [
+                5,
+                1
+            ]
+        },
+        {
+            "presetId": "monster",
+            "position": [
+                8,
+                1
+            ]
+        }
+    ]
+}
