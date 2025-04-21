@@ -1,11 +1,60 @@
 {
-  "controllers": [
-    { "type": "Controller2D", "description": "Move" },
-    { "type": "ControllerButton", "description": "Jump", "keyCode": "Space" },
-    { "type": "ControllerButton", "description": "Shoot", "keyCode": "Z" }
+  "entities": [
+    {
+      "name": "Player", "position": [0, 0], "tags": ["Player"], "color": "#00BFFF",
+      "components": [
+        { "type": "Movable", "moveSpeed": 3.0, "listenTo": 0 },
+        { "type": "Jumpable", "jumpForce": 12.0, "listenTo": 1 },
+        { "type": "Gravity", "gravityScale": 1.0 },
+        { "type": "Stats", "values": { "Timer": 30, "HP": 1 } },
+        { "type": "StatOverTime", "stat": "Timer", "amountPerSecond": -1, "interval": 1.0 },
+        // { "type": "EffectReceiverStat" },
+        // { "type": "EffectReceiverKnockback" },
+        { "type": "LoseIf", "trigger": "onStatChanged", "stat": "Timer", "operator": "lessThanOrEqual", "value": 0 },
+        { "type": "LoseIf", "trigger": "onStatChanged", "stat": "HP", "operator": "lessThanOrEqual", "value": 0 },
+        { "type": "WinIf", "trigger": "onStatChanged", "stat": "Timer", "operator": "greaterThanOrEqual", "value": 999 },
+        { "type": "CameraTarget" }
+      ]
+    },
+    {
+      "name": "Goal", "position": [0, 40], "tags": ["Goal"], "color": "#FFD700",
+      "components": [
+        {
+          "type": "EffectOnHit", "targetTags": ["Player"],
+          "effects": [{ "type": "stat", "key": "Timer", "value": 999 }]
+        }
+      ]
+    },
+    { "presetId": "deathZone", "position": [-4, -5] },
+    { "presetId": "deathZone", "position": [-2, -5] },
+    { "presetId": "deathZone", "position": [0, -5] },
+    { "presetId": "deathZone", "position": [2, -5] },
+    { "presetId": "deathZone", "position": [4, -5] },
+    { "presetId": "ground", "position": [0, -4] },
+    { "presetId": "platform", "position": [0, 4] },
+    { "presetId": "platform", "position": [-1, 8] },
+    { "presetId": "platform", "position": [1, 12] },
+    { "presetId": "platform", "position": [0, 16] },
+    { "presetId": "platform", "position": [1, 20] },
+    { "presetId": "platform", "position": [-1, 24] },
+    { "presetId": "platform", "position": [0, 28] },
+    { "presetId": "platform", "position": [1, 32] },
+    { "presetId": "platform", "position": [-1, 36] },
+    { "presetId": "platform", "position": [0, 40] },
+    { "presetId": "spike", "position": [1, 13] },
+    { "presetId": "spike", "position": [0, 29] },
+    { "presetId": "spike", "position": [-1, 37] }
   ],
-  "camera": { "fov": 6.0 },
   "presets": {
+    "deathZone": {
+      "name": "Death Zone", "color": "#FF0000", "tags": ["LoseZone"],
+      "components": [
+        {
+          "type": "EffectOnHit", "targetTags": ["Player"],
+          "effects": [{ "type": "stat", "key": "HP", "value": -1 }]
+        }
+      ]
+    },
     "platform": {
       "name": "Platform", "color": "#A0A0A0",
       "components": [{ "type": "Immovable" }]
@@ -23,116 +72,11 @@
         },
         { "type": "DestroyIf", "trigger": "onEffectGiven" }
       ]
-    },
-    "item": {
-      "name": "Coin Item", "color": "#FFD700", "tags": ["Item"],
-      "components": [
-        { "type": "Immovable" },
-        {
-          "type": "EffectOnHit", "targetTags": ["Player"],
-          "effects": [{ "type": "stat", "key": "coin", "value": 1 }]
-        },
-        { "type": "DestroyIf", "trigger": "onEffectGiven" }
-      ]
-    },
-    "bullet": {
-      "name": "Player Bullet", "color": "#FFFF00", "tags": ["Projectile"],
-      "components": [
-        { "type": "Movable", "moveSpeed": 10.0, "listenTo": 0 },
-        { "type": "Projectile" },
-        {
-          "type": "EffectOnHit", "targetTags": ["Enemy"],
-          "effects": [
-            { "type": "stat", "key": "HP", "value": -1 },
-            { "type": "knockback", "force": 2.0, "direction": "fromSelf", "space": "world" }
-          ]
-        },
-        { "type": "DestroyIf", "trigger": "onEffectGiven" }
-      ]
-    },
-    "monster": {
-      "name": "Enemy", "color": "#FF0000", "tags": ["Enemy"],
-      "components": [
-        { "type": "Stats", "values": { "HP": 2 } },
-        { "type": "EffectReceiverStat" },
-        { "type": "EffectReceiverKnockback" },
-        {
-          "type": "EffectOnHit", "targetTags": ["Player"],
-          "effects": [
-            { "type": "stat", "key": "HP", "value": -1 },
-            { "type": "knockback", "force": 5.0, "direction": "fromSelf", "space": "world" }
-          ]
-        },
-        { "type": "DestroyIf", "trigger": "onStatChanged", "stat": "HP", "operator": "lessThanOrEqual", "value": 0 }
-      ]
-    },
-    "deathZone": {
-      "name": "Death Zone", "color": "#FF0000", "tags": ["LoseZone"],
-      "components": [
-        {
-          "type": "EffectOnHit", "targetTags": ["Player"],
-          "effects": [{ "type": "stat", "key": "HP", "value": -1 }]
-        }
-      ]
     }
   },
-  "entities": [
-    {
-      "name": "Player", "position": [0, 1], "tags": ["Player"], "color": "#00BFFF",
-      "components": [
-        { "type": "Stats", "values": { "HP": 3, "coin": 0, "Timer": 40 } },
-        { "type": "EffectReceiverStat" },
-        { "type": "EffectReceiverKnockback" },
-        { "type": "Movable", "moveSpeed": 4.5, "listenTo": 0 },
-        { "type": "Jumpable", "jumpForce": 11.0, "listenTo": 1 },
-        { "type": "Gravity", "gravityScale": 1.0 },
-        { "type": "CameraTarget" },
-        {
-          "type": "Shooter",
-          "projectilePresetId": "bullet",
-          "listenTo": 2,
-          "shootDirection": "fixed",
-          "fixedDirection": [1, 0],
-          "directionSpace": "world"
-        },
-        { "type": "StatOverTime", "stat": "Timer", "amountPerSecond": -1, "interval": 1.0 },
-        { "type": "DestroyIf", "trigger": "onStatChanged", "stat": "HP", "operator": "lessThanOrEqual", "value": 0 },
-        { "type": "LoseIf", "trigger": "onStatChanged", "stat": "Timer", "operator": "lessThanOrEqual", "value": 0 },
-        { "type": "WinIf", "trigger": "onStatChanged", "stat": "coin", "operator": "greaterThanOrEqual", "value": 5 },
-        { "type": "WinIf", "trigger": "onStatChanged", "stat": "Timer", "operator": "greaterThanOrEqual", "value": 999 }
-      ]
-    },
-    {
-      "name": "Goal", "position": [0, 40], "tags": ["Goal"], "color": "#FFD700",
-      "components": [
-        {
-          "type": "EffectOnHit", "targetTags": ["Player"],
-          "effects": [{ "type": "stat", "key": "Timer", "value": 999 }]
-        }
-      ]
-    },
-    { "presetId": "item", "position": [-2, 4] },
-    { "presetId": "item", "position": [0, 8] },
-    { "presetId": "item", "position": [2, 12] },
-    { "presetId": "item", "position": [-2, 16] },
-    { "presetId": "item", "position": [0, 20] },
-    { "presetId": "monster", "position": [-1, 6] },
-    { "presetId": "monster", "position": [1, 10] },
-    { "presetId": "monster", "position": [-1, 14] },
-    { "presetId": "spike", "position": [1, 18] },
-    { "presetId": "spike", "position": [-1, 22] },
-    { "presetId": "deathZone", "position": [-2, -5] },
-    { "presetId": "deathZone", "position": [0, -5] },
-    { "presetId": "platform", "position": [0, 0] },
-    { "presetId": "platform", "position": [-1, 4] },
-    { "presetId": "platform", "position": [1, 8] },
-    { "presetId": "platform", "position": [-1, 12] },
-    { "presetId": "platform", "position": [1, 16] },
-    { "presetId": "platform", "position": [0, 20] },
-    { "presetId": "platform", "position": [-1, 24] },
-    { "presetId": "platform", "position": [1, 28] },
-    { "presetId": "platform", "position": [0, 32] },
-    { "presetId": "platform", "position": [-1, 36] },
-    { "presetId": "platform", "position": [0, 40] }
-  ]
+  "controllers": [
+    { "type": "Controller2D", "description": "Move Left/Right" },
+    { "type": "ControllerButton", "description": "Jump", "keyCode": "Space" }
+  ],
+  "camera": { "fov": 6.0 }
 }

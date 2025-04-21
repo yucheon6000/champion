@@ -8,9 +8,16 @@ public abstract class IComponent : MonoBehaviour
     protected Entity entity { private set; get; }
     protected bool init = false;
 
-    public virtual void Init(Entity entity)
+    public virtual void Added(Entity entity)
     {
         this.entity = entity;
+    }
+
+    public virtual void Init(Entity entity)
+    {
+        if (this.entity == null)
+            this.entity = entity;
+
         init = true;
     }
 

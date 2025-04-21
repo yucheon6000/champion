@@ -15,8 +15,15 @@ public class PresetManager : MonoBehaviour
             Instance = this;
     }
 
+    public void Reset()
+    {
+        presetMap.Clear();
+    }
+
     public void Init(JObject presetsJObject)
     {
+        Reset();
+
         foreach (var kv in presetsJObject)
         {
             string id = kv.Key;

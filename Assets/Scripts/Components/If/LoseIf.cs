@@ -6,7 +6,6 @@ public class LoseIf : ConditionalActionIf
 
     protected override void ExecuteAction()
     {
-        Debug.Log("Game Over!");
-        // GameManager.Instance.LoseGame(); 와 같은 실제 처리도 여기에
+        WinLoseManager.Instance.Lose();
     }
 }

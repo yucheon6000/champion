@@ -99,8 +99,13 @@ public class EntityManager : MonoBehaviour
     {
         foreach (var e in entities)
         {
-            if (e != null) Destroy(e);
+            try
+            {
+                Destroy(e.gameObject);
+            }
+            catch { }
         }
+
         entities.Clear();
     }
 

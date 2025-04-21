@@ -16,6 +16,8 @@ public class GameCreator : MonoBehaviour
     private EntityManager entityManager;
     [SerializeField]
     private CameraManager cameraManager;
+    [SerializeField]
+    private WinLoseManager winLoseManager;
 
     [SerializeField]
     private string fileName;
@@ -25,10 +27,31 @@ public class GameCreator : MonoBehaviour
 
     void Start()
     {
-        Init();
+        StopGame();
     }
 
-    private void Init()
+    public void PlayGame()
+    {
+        winLoseManager.Reset();
+        Time.timeScale = 1;
+    }
+
+    private void ResetAllManagers()
+    {
+        controllerManager.Reset();
+        presetManager.Reset();
+        cameraManager.Reset();
+        entityManager.ClearAllEntities();
+    }
+
+    public void StopGame()
+    {
+        ResetAllManagers();
+        Time.timeScale = 0;
+        InitFromJson();
+    }
+
+    private void InitFromJson()
     {
         TextAsset jsonFile = Resources.Load<TextAsset>(fileName);
         jsonInputField.text = jsonFile.text;

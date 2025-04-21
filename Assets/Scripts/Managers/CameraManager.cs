@@ -6,6 +6,18 @@ public class CameraManager : MonoBehaviour
     [SerializeField]
     private Camera mainCamera;
 
+    private Vector3 originalPosition;
+
+    private void Awake()
+    {
+        originalPosition = mainCamera.transform.position;
+    }
+
+    public void Reset()
+    {
+        mainCamera.transform.position = originalPosition;
+    }
+
     public void Init(JObject cameraJson)
     {
         if (mainCamera == null)

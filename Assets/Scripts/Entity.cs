@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -9,8 +10,10 @@ public class Entity : MonoBehaviour
 {
     [Header("Read Only!")]
     [SerializeField]
-    private List<IComponent> components;
     private List<string> Tags = new List<string>();
+
+    [SerializeField]
+    private List<IComponent> components;
 
     [Header("Stats UI")]
     [SerializeField]
@@ -38,13 +41,12 @@ public class Entity : MonoBehaviour
 
     public void FromJson(JObject json)
     {
-        JArray componentsJArray = (JArray)json["components"];
-        AddComponentByJson(componentsJArray);
-
+        // Set tags
         if (json.TryGetValue("tags", out var tagToken) && tagToken is JArray tagArray)
             foreach (var tag in tagArray)
                 Tags.Add(tag.ToString());
 
+        // Set color
         if (json.TryGetValue("color", out var colorToken))
         {
             if (ColorUtility.TryParseHtmlString(colorToken.Value<string>(), out var color))
@@ -54,6 +56,19 @@ public class Entity : MonoBehaviour
             }
         }
 
+        // Add default components to the 'components' list.
+        components = GetComponents<IComponent>().ToList();
+        foreach (var c in components)
+            c.Added(this);
+
+        // Add components from json.
+        JArray componentsJArray = (JArray)json["components"];
+        AddComponentByJson(componentsJArray);
+
+        // Initialize all components
+        InitAllComponents();
+
+        // Initialize stat UI
         InitStatsUI();
     }
 
@@ -61,7 +76,6 @@ public class Entity : MonoBehaviour
 
     private void AddComponentByJson(JArray jsonArray)
     {
-        List<IComponent> addedComponents = new List<IComponent>();
 
         foreach (JObject json in jsonArray)
         {
@@ -74,11 +88,14 @@ public class Entity : MonoBehaviour
             component.FromJson(json);
 
             components.Add(component);
-            addedComponents.Add(component);
+            component.Added(this);
         }
+    }
 
+    private void InitAllComponents()
+    {
         // Initialize all the added components.
-        foreach (IComponent component in addedComponents)
+        foreach (IComponent component in components)
             component.Init(this);
     }
 

@@ -15,8 +15,18 @@ public class ControllerManager : MonoBehaviour
             Instance = this;
     }
 
+    public void Reset()
+    {
+        foreach (var c in controllers)
+            Destroy(c.gameObject);
+
+        controllers.Clear();
+    }
+
     public void Init(JArray controllersJArray)
     {
+        Reset();
+
         foreach (JObject controllerJson in controllersJArray)
         {
             GameObject controllerGameObject = new GameObject("Controller");

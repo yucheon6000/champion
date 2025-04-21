@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class CameraTarget : IComponent
 {
-    public static CameraTarget CurrentTarget;
+    public static CameraTarget CurrentTarget { private set; get; }
 
     public override void FromJson(JObject json)
     {
@@ -11,17 +11,10 @@ public class CameraTarget : IComponent
 
     protected override string GetComponentType() => "CameraTarget";
 
-    private void Awake()
+    public override void Init(Entity entity)
     {
-        // 하나의 타겟만 존재하도록 보장
-        if (CurrentTarget == null)
-        {
-            CurrentTarget = this;
-        }
-        else
-        {
-            Debug.LogWarning("Multiple CameraTarget components detected. Only the first will be used.");
-        }
+        base.Init(entity);
+        CurrentTarget = this;
     }
 
     private void OnDestroy()
