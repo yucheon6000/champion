@@ -223,27 +223,6 @@ Applies effects upon collision with tagged entities.
 }
 ```
 
-### EffectReceiverStat
-
-Enables entity to receive stat-changing effects.
-
-```json
-{
-  "type": "EffectReceiverStat" // No additional fields
-  // Must be used with Stats component
-}
-```
-
-### EffectReceiverKnockback
-
-Enables entity to receive knockback forces.
-
-```json
-{
-  "type": "EffectReceiverKnockback" // No additional fields
-}
-```
-
 ### DestroyIf
 
 Removes entity when a condition is met.
