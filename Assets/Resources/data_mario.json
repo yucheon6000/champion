@@ -12,7 +12,7 @@
         {
             "type": "ControllerButton",
             "description": "Shoot",
-            "keyCode": "LeftControl"
+            "keyCode": "Z"
         }
     ],
     "camera": {

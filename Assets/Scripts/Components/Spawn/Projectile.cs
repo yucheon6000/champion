@@ -19,7 +19,8 @@ public class Projectile : ComponentUsingMovable
     private void Update()
     {
         CheckMovable();
-        movable.Move(direction);
+        Vector2 dir = direction == Vector2.zero ? Vector2.right : direction;
+        movable.Move(dir);
     }
 
     public override void FromJson(JObject json) { }

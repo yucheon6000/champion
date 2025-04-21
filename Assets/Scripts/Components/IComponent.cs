@@ -6,10 +6,12 @@ using UnityEngine;
 public abstract class IComponent : MonoBehaviour
 {
     protected Entity entity { private set; get; }
+    protected bool init = false;
 
     public virtual void Init(Entity entity)
     {
         this.entity = entity;
+        init = true;
     }
 
     public virtual JObject ToJson()

@@ -11,6 +11,14 @@ public class Rotatable : ComponentUsingMovable
 
     private float targetAngle;
 
+    public override void Init(Entity entity)
+    {
+        base.Init(entity);
+        Rigidbody2D rb = GetComponent<Rigidbody2D>();
+        if (rb)
+            rb.constraints &= ~RigidbodyConstraints2D.FreezeRotation;
+    }
+
     public void FaceDirection(Vector2 direction)
     {
         if (direction.sqrMagnitude < 0.001f) return;

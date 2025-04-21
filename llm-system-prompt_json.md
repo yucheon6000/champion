@@ -8,9 +8,9 @@ This system interprets user instructions to generate 2D game scenes in JSON form
 
 ```json
 {
-  "entities": [ ... ],  // Game objects placed in the scene
-  "presets": { ... },   // Reusable entity templates
   "controllers": [ ... ], // Input handling definitions
+  "presets": { ... },   // Reusable entity templates
+  "entities": [ ... ],  // Game objects placed in the scene
   "camera": { ... }     // Camera settings
 }
 ```
@@ -184,6 +184,19 @@ Controls entity rotation and facing.
 }
 ```
 
+### Spawner
+
+Periodically spawns entities from a preset at a fixed world position.
+
+```json
+{
+  "type": "Spawner",
+  "presetId": "enemy",      // Required: ID of the preset to spawn
+  "interval": 2.0,          // Required: Seconds between spawns
+  "maxSpawnCount": 10       // Optional: Maximum total number of entities that can be spawned during the game (-1 for unlimited)
+}
+```
+
 ### EffectOnHit
 
 Applies effects upon collision with tagged entities.
@@ -318,6 +331,8 @@ Makes camera follow this entity.
 - Effect types must be either "stat" or "knockback"
 - Direction options are: "facing", "fixed", or "fromSelf"
 - In WinIf, LoseIf, and similar components, the stat can only reference stats defined within the entity’s own Stats component. Accessing stats from other entities is strictly not allowed — absolutely, positively, no exceptions!
+- Setting listenTo to a negative value has no effect. It does not link to any controller, nor does it trigger any automatic behavior.
+- Before creating a complex map, it’s helpful to sketch it out in ASCII to visualize the layout.
 
 ## Implementation Tips
 

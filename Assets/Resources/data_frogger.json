@@ -1,0 +1,158 @@
+{
+  "controllers": [
+    {
+      "type": "Controller2D",
+      "description": "Move"
+    }
+  ],
+  "presets": {
+    "carLeft": {
+      "name": "Left Car",
+      "color": "#FF4444",
+      "tags": ["Enemy"],
+      "components": [
+        { "type": "Movable", "moveSpeed": -3.0 },
+        { "type": "Projectile" },
+        {
+          "type": "EffectOnHit",
+          "targetTags": ["Player"],
+          "effects": [{ "type": "stat", "key": "HP", "value": -1 }]
+        },
+        {
+          "type": "DestroyIf",
+          "trigger": "onEffectGiven",
+          "operator": "greaterThanOrEqual",
+          "value": 1
+        }
+      ]
+    },
+    "carRight": {
+      "name": "Right Car",
+      "color": "#4444FF",
+      "tags": ["Enemy"],
+      "components": [
+        { "type": "Movable", "moveSpeed": 3.0 },
+        { "type": "Projectile" },
+        {
+          "type": "EffectOnHit",
+          "targetTags": ["Player"],
+          "effects": [{ "type": "stat", "key": "HP", "value": -1 }]
+        },
+        {
+          "type": "DestroyIf",
+          "trigger": "onEffectGiven",
+          "operator": "greaterThanOrEqual",
+          "value": 1
+        }
+      ]
+    },
+    "goal": {
+      "name": "Goal",
+      "color": "#FFFF00",
+      "tags": ["Goal"],
+      "components": [
+        {
+          "type": "EffectOnHit",
+          "targetTags": ["Player"],
+          "effects": [{ "type": "stat", "key": "Score", "value": 999 }]
+        },
+        { "type": "Immovable" }
+      ]
+    }
+  },
+  "entities": [
+    {
+      "name": "Player",
+      "position": [0, 0],
+      "color": "#00FF00",
+      "tags": ["Player"],
+      "components": [
+        { "type": "Movable", "moveSpeed": 2.5, "listenTo": 0 },
+        { "type": "Rotatable", "faceMovement": true, "turnSpeed": -1 },
+        {
+          "type": "Stats",
+          "values": { "HP": 1, "Score": 0 }
+        },
+        {
+          "type": "StatOverTime",
+          "stat": "Score",
+          "amountPerSecond": 1,
+          "interval": 1.0
+        },
+        { "type": "EffectReceiverStat" },
+        { "type": "EffectReceiverKnockback" },
+        { "type": "CameraTarget" },
+        {
+          "type": "WinIf",
+          "trigger": "onStatChanged",
+          "stat": "Score",
+          "operator": "greaterThanOrEqual",
+          "value": 999
+        },
+        {
+          "type": "LoseIf",
+          "trigger": "onStatChanged",
+          "stat": "HP",
+          "operator": "lessThanOrEqual",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "name": "RightSpawnerLane1",
+      "position": [-8, 2],
+      "components": [
+        {
+          "type": "Spawner",
+          "presetId": "carRight",
+          "interval": 2.0,
+          "maxSpawnCount": -1
+        }
+      ]
+    },
+    {
+      "name": "LeftSpawnerLane2",
+      "position": [8, 4],
+      "components": [
+        {
+          "type": "Spawner",
+          "presetId": "carLeft",
+          "interval": 2.4,
+          "maxSpawnCount": -1
+        }
+      ]
+    },
+    {
+      "name": "RightSpawnerLane3",
+      "position": [-8, 6],
+      "components": [
+        {
+          "type": "Spawner",
+          "presetId": "carRight",
+          "interval": 2.8,
+          "maxSpawnCount": -1
+        }
+      ]
+    },
+    {
+      "name": "LeftSpawnerLane4",
+      "position": [8, 8],
+      "components": [
+        {
+          "type": "Spawner",
+          "presetId": "carLeft",
+          "interval": 3.2,
+          "maxSpawnCount": -1
+        }
+      ]
+    },
+    {
+      "name": "GoalZone",
+      "position": [0, 10],
+      "presetId": "goal"
+    }
+  ],
+  "camera": {
+    "fov": 8.0
+  }
+}
