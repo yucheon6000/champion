@@ -4,6 +4,7 @@ using System.Linq;
 using Newtonsoft.Json.Linq;
 using TMPro;
 using UnityEngine;
+using System.IO;
 
 public class GameCreator : MonoBehaviour
 {
@@ -18,6 +19,8 @@ public class GameCreator : MonoBehaviour
     private CameraManager cameraManager;
     [SerializeField]
     private WinLoseManager winLoseManager;
+    [SerializeField]
+    private PromptManager promptManager;
 
     [SerializeField]
     private string fileName;
@@ -25,15 +28,39 @@ public class GameCreator : MonoBehaviour
     [SerializeField]
     TMP_InputField jsonInputField;
 
+    private string lastJsonPath => Path.Combine(Application.persistentDataPath, fileName);
+
+    JObject lastJson;
+
     void Start()
     {
         StopGame();
+        promptManager.Init();
+        promptManager.OnGetNewPrompt.AddListener(OnGetNewJson);
+        promptManager.AddLastJson(lastJson.ToString());
+    }
+
+    private void InitFromLastJsonFile()
+    {
+        // 마지막 json 파일이 있으면 불러와서 적용
+        if (File.Exists(lastJsonPath))
+        {
+            string jsonText = File.ReadAllText(lastJsonPath);
+            lastJson = JObject.Parse(jsonText);
+            InitFromJson(lastJson);
+        }
     }
 
     public void PlayGame()
     {
-        winLoseManager.Reset();
         Time.timeScale = 1;
+    }
+
+    public void ResetGame()
+    {
+        StopGame();
+        ResetAllManagers();
+        promptManager.Reset();
     }
 
     private void ResetAllManagers()
@@ -42,27 +69,27 @@ public class GameCreator : MonoBehaviour
         presetManager.Reset();
         cameraManager.Reset();
         entityManager.ClearAllEntities();
+        winLoseManager.Reset();
     }
 
     public void StopGame()
     {
         ResetAllManagers();
+        InitFromLastJsonFile();
         Time.timeScale = 0;
-        InitFromJson();
     }
 
-    private void InitFromJson()
+    public void OnGetNewJson(JObject json)
     {
-        TextAsset jsonFile = Resources.Load<TextAsset>(fileName);
-        jsonInputField.text = jsonFile.text;
+        ResetAllManagers();
+        Time.timeScale = 0;
+        InitFromJson(json);
+    }
 
-        if (jsonFile == null)
-        {
-            Debug.LogWarning("JSON 파일을 찾을 수 없습니다.");
-            return;
-        }
-
-        JObject json = JObject.Parse(jsonFile.text);
+    private void InitFromJson(JObject json)
+    {
+        // json 파일 저장
+        File.WriteAllText(lastJsonPath, json.ToString());
 
         // Set controllers.
         JArray controllersJArray = (JArray)json["controllers"];

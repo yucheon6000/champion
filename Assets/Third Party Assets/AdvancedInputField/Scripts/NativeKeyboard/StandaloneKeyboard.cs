@@ -393,113 +393,132 @@ namespace AdvancedInputFieldPlugin
 			OnTextEditUpdate(text, selectionStartPosition, selectionEndPosition);
 		}
 
-		/// <summary>
-		/// 한글 자모 조합/분리/이중받침/복합모음/호환 자모 결합까지 처리한 문자열 병합 함수
-		/// </summary>
+
 		private string CombineKoreanJamo(string currentText, string input, ref int caretPosition)
 		{
-			var result = new StringBuilder(currentText);
+			var sb = new StringBuilder(currentText);
 
-			// 1) 조합용 Jamo 테이블 (호환 Jamo 기준)
+			// 1) 초·중·종성 테이블
 			char[] L = { 'ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ' };
 			char[] V = { 'ㅏ', 'ㅐ', 'ㅑ', 'ㅒ', 'ㅓ', 'ㅔ', 'ㅕ', 'ㅖ', 'ㅗ', 'ㅘ', 'ㅙ', 'ㅚ', 'ㅛ', 'ㅜ', 'ㅝ', 'ㅞ', 'ㅟ', 'ㅠ', 'ㅡ', 'ㅢ', 'ㅣ' };
 			char[] T = {
-		'\0','ㄱ','ㄲ','ㄳ','ㄴ','ㄵ','ㄶ','ㄷ','ㄹ','ㄺ','ㄻ','ㄼ','ㄽ','ㄾ','ㄿ','ㅀ',
-		'ㅁ','ㅂ','ㅄ','ㅅ','ㅆ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'
-	};
+							'\0','ㄱ','ㄲ','ㄳ','ㄴ','ㄵ','ㄶ','ㄷ','ㄹ','ㄺ','ㄻ','ㄼ','ㄽ','ㄾ','ㄿ','ㅀ',
+							'ㅁ','ㅂ','ㅄ','ㅅ','ㅆ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'
+						};
 
-			// 2) 복합 모음 매핑
-			var compoundVowels = new Dictionary<(int, int), int>
-	{
-		{(8,0),9},{(8,1),10},{(8,20),11},    // ㅗ+ㅏ→ㅘ, ㅗ+ㅐ→ㅙ, ㅗ+ㅣ→ㅚ
-        {(13,4),14},{(13,5),15},{(13,20),16}, // ㅜ+ㅓ→ㅝ, ㅜ+ㅔ→ㅞ, ㅜ+ㅣ→ㅟ
-        {(18,20),19}                          // ㅡ+ㅣ→ㅢ
-    };
+			// 2) 복합 모음 매핑: (기존 중성 idx, 입력 중성 idx) → 새로운 중성 idx
+			var compoundVowels = new Dictionary<(int, int), int>{
+																	{(8,0),9},   {(8,1),10},  {(8,20),11},
+																	{(13,4),14}, {(13,5),15}, {(13,20),16},
+																	{(18,20),19}
+																};
 
-			// 3) 이중 받침 매핑
-			var doubleFinals = new Dictionary<(char, char), char>
-	{
-		{('ㄱ','ㅅ'),'ㄳ'},{('ㄴ','ㅈ'),'ㄵ'},{('ㄴ','ㅎ'),'ㄶ'},
-		{('ㄹ','ㄱ'),'ㄺ'},{('ㄹ','ㅁ'),'ㄻ'},{('ㄹ','ㅂ'),'ㄼ'},{('ㄹ','ㅅ'),'ㄽ'},{('ㄹ','ㅌ'),'ㄾ'},{('ㄹ','ㅍ'),'ㄿ'},{('ㄹ','ㅎ'),'ㅀ'},
-		{('ㅂ','ㅅ'),'ㅄ'}
-	};
+			// 3) composite-final 조합 매핑: (기존받침, 입력받침) → 새로운 composite 받침
+			var combineDoubleFinals = new Dictionary<(char, char), char>
+			{
+				{('ㄱ','ㅅ'),'ㄳ'},
+				{('ㄴ','ㅈ'),'ㄵ'},{('ㄴ','ㅎ'),'ㄶ'},
+				{('ㄹ','ㄱ'),'ㄺ'},{('ㄹ','ㅁ'),'ㄻ'},{('ㄹ','ㅂ'),'ㄼ'},{('ㄹ','ㅅ'),'ㄽ'},{('ㄹ','ㅌ'),'ㄾ'},{('ㄹ','ㅍ'),'ㄿ'},{('ㄹ','ㅎ'),'ㅀ'},
+				{('ㅂ','ㅅ'),'ㅄ'}
+			};
+
+			// 4) composite-final 분리 매핑: composite 받침 → (첫번째받침, 두번째초성)
+			var splitDoubleFinals = new Dictionary<char, (char first, char second)>
+			{
+				{'ㄳ',('ㄱ','ㅅ')}, {'ㄵ',('ㄴ','ㅈ')}, {'ㄶ',('ㄴ','ㅎ')},
+				{'ㄺ',('ㄹ','ㄱ')}, {'ㄻ',('ㄹ','ㅁ')}, {'ㄼ',('ㄹ','ㅂ')}, {'ㄽ',('ㄹ','ㅅ')}, {'ㄾ',('ㄹ','ㅌ')}, {'ㄿ',('ㄹ','ㅍ')}, {'ㅀ',('ㄹ','ㅎ')},
+				{'ㅄ',('ㅂ','ㅅ')}
+			};
 
 			foreach (char ch in input)
 			{
-				// ① 호환 자모 초성+중성 즉시 결합 (ㅇ+ㅏ→아, ㄷ+ㅣ→디)
-				if (caretPosition > 0 && Array.IndexOf(L, result[caretPosition - 1]) >= 0 && Array.IndexOf(V, ch) >= 0)
+				// A) 이전 글자가 완성형 한글이고, 새 입력이 jamo(자음·모음)이면
+				if (caretPosition > 0)
 				{
-					int l = Array.IndexOf(L, result[caretPosition - 1]);
-					int v = Array.IndexOf(V, ch);
-					char syl = (char)(0xAC00 + (l * 21 + v) * 28);
-					result[caretPosition - 1] = syl;
-					continue;
-				}
-
-				// ② 기존 완성형 음절 조합/분리/이중받침/복합모음
-				if (IsKoreanJamo(ch) && caretPosition > 0)
-				{
-					char last = result[caretPosition - 1];
-					int sIndex = last - 0xAC00;
+					char prev = sb[caretPosition - 1];
+					int sIndex = prev - 0xAC00;
 					if (sIndex >= 0 && sIndex < 11172)
 					{
 						int lIdx = sIndex / (21 * 28);
 						int vIdx = (sIndex % (21 * 28)) / 28;
 						int tIdx = sIndex % 28;
-						int v2 = Array.IndexOf(V, ch);
-						int t2 = Array.IndexOf(T, ch);
+						int v2 = Array.IndexOf(V, ch);  // 모음 인덱스
+						int t2 = Array.IndexOf(T, ch);  // 자음(받침) 인덱스
 
-						// 2‑1) 받침 분리 (안+ㅏ→아나)
-						if (tIdx > 0 && v2 >= 0)
+						// A1) composite-final **조합** (길 + ㄱ → 긹)
+						if (tIdx > 0 && t2 > 0 &&
+							combineDoubleFinals.TryGetValue((T[tIdx], ch), out char newFinal))
 						{
-							char baseSyl = (char)(0xAC00 + (lIdx * 21 + vIdx) * 28);
-							int newL = Array.IndexOf(L, T[tIdx]);
-							char nextSyl = (char)(0xAC00 + (newL * 21 + v2) * 28);
-							result.Remove(caretPosition - 1, 1);
-							result.Insert(caretPosition - 1, baseSyl.ToString());
-							result.Insert(caretPosition, nextSyl.ToString());
+							int newTidx = Array.IndexOf(T, newFinal);
+							sb[caretPosition - 1] = (char)(0xAC00 + (lIdx * 21 + vIdx) * 28 + newTidx);
+							continue;
+						}
+
+						// A2) composite-final **분리** (긹 + ㅔ → 길 + 게)
+						if (tIdx > 0 && v2 >= 0 &&
+							splitDoubleFinals.TryGetValue(T[tIdx], out var pair))
+						{
+							// 앞글자: 기존 받침만 떼고
+							int baseTidx = Array.IndexOf(T, pair.first);
+							char baseSyl = (char)(0xAC00 + (lIdx * 21 + vIdx) * 28 + baseTidx);
+
+							// 뒷글자: composite 둘째 자모를 초성으로 + 새 모음
+							int nextLidx = Array.IndexOf(L, pair.second);
+							char nextSyl = (char)(0xAC00 + (nextLidx * 21 + v2) * 28);
+
+							sb[caretPosition - 1] = baseSyl;
+							sb.Insert(caretPosition, nextSyl);
 							caretPosition++;
 							continue;
 						}
 
-						// 2‑2) 이중 받침 (악+ㅅ→앇)
-						if (tIdx > 0 && doubleFinals.TryGetValue((T[tIdx], ch), out char dbl))
+						// A3) 단일 받침 분리 (안 + ㅏ → 아 + 나)
+						if (tIdx > 0 && v2 >= 0)
 						{
-							int newT = Array.IndexOf(T, dbl);
-							result[caretPosition - 1] = (char)(0xAC00 + (lIdx * 21 + vIdx) * 28 + newT);
+							char baseSyl = (char)(0xAC00 + (lIdx * 21 + vIdx) * 28);
+							int nextL = Array.IndexOf(L, T[tIdx]);
+							char nextSyl = (char)(0xAC00 + (nextL * 21 + v2) * 28);
+
+							sb[caretPosition - 1] = baseSyl;
+							sb.Insert(caretPosition, nextSyl);
+							caretPosition++;
 							continue;
 						}
 
-						// 2‑3) 복합 모음 (도+ㅣ→되)
-						if (tIdx == 0 && v2 >= 0 && compoundVowels.TryGetValue((vIdx, v2), out int cv))
+						// A4) 복합 모음 합성 (도 + ㅣ → 되)
+						if (tIdx == 0 && v2 >= 0 &&
+							compoundVowels.TryGetValue((vIdx, v2), out int newV))
 						{
-							result[caretPosition - 1] = (char)(0xAC00 + (lIdx * 21 + cv) * 28);
+							sb[caretPosition - 1] = (char)(0xAC00 + (lIdx * 21 + newV) * 28);
 							continue;
 						}
 
-						// 2‑4) 단일 받침 추가 (가+ㄱ→각)
+						// A5) 단일 받침 추가 (가 + ㄱ → 각)
 						if (tIdx == 0 && t2 > 0)
 						{
-							result[caretPosition - 1] = (char)(0xAC00 + (lIdx * 21 + vIdx) * 28 + t2);
+							sb[caretPosition - 1] = (char)(0xAC00 + (lIdx * 21 + vIdx) * 28 + t2);
 							continue;
 						}
 					}
 				}
 
-				// ③ 그 외 insert
-				result.Insert(caretPosition, ch);
+				// B) 호환 Jamo 초성+중성 합성 (ㅇ + ㅏ → 아, ㄷ + ㅣ → 디)
+				if (caretPosition > 0 &&
+					Array.IndexOf(L, sb[caretPosition - 1]) >= 0 &&
+					Array.IndexOf(V, ch) >= 0)
+				{
+					int l = Array.IndexOf(L, sb[caretPosition - 1]);
+					int v = Array.IndexOf(V, ch);
+					sb[caretPosition - 1] = (char)(0xAC00 + (l * 21 + v) * 28);
+					continue;
+				}
+
+				// C) 기타: 그냥 삽입
+				sb.Insert(caretPosition, ch);
 				caretPosition++;
 			}
 
-			return result.ToString();
-		}
-
-		/// <summary>한글 자모(Compatibility Jamo / 완성형) 판별</summary>
-		private bool IsKoreanJamo(char c)
-		{
-			return (c >= 0x1100 && c <= 0x11FF) ||   // Hangul Jamo
-				   (c >= 0x3130 && c <= 0x318F) ||   // Compatibility Jamo
-				   (c >= 0xAC00 && c <= 0xD7A3);     // Hangul Syllables
+			return sb.ToString();
 		}
 
 		public void ApplyCharacterLimit(ref string text, ref int caretPosition)

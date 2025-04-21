@@ -1,6 +1,10 @@
 # Created by https://www.toptal.com/developers/gitignore/api/macos,unity
 # Edit at https://www.toptal.com/developers/gitignore?templates=macos,unity
 
+# API Keys
+openai-api-key.txt
+openai-api-key.txt.meta
+
 ### macOS ###
 # General
 .DS_Store
