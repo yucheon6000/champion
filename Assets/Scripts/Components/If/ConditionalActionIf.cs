@@ -87,7 +87,7 @@ public abstract class ConditionalActionIf : IComponent
     {
         if (trigger != "onEffectGiven") return;
         if (!IsSourceMatch(evt.sourceId)) return;
-        if (!EvaluateStatConditionFromSelfOrIgnore()) return;
+        // if (!EvaluateStatConditionFromSelfOrIgnore()) return;
 
         ExecuteAction();
     }

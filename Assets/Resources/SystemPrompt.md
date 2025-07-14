@@ -229,7 +229,11 @@ Applies effects upon collision with tagged entities.
 ### DestroyIf
 
 Removes entity when a condition is met.
+stat, operator, value는 onStatChanged일때만 적고 아니면, 적지말 것!
+onEffectGiven: 컴포넌트를 가지고 있는 객체가 다른 객체에 effect를 줄때 호출됨
+onEffectReceived: 컴포넌트를 가지고 있는 객체가 다른 객체로부터 effect를 받을때 호출됨
 
+예를 들어 총알이면 총알이 플레이어에게 given을 하는 것과 같음
 ```json
 {
   "type": "DestroyIf",

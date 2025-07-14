@@ -28,7 +28,24 @@ public class GameCreator : MonoBehaviour
     [SerializeField]
     TMP_InputField jsonInputField;
 
-    private string lastJsonPath => Path.Combine(Application.persistentDataPath, fileName);
+    private string GetProjectRootPath()
+    {
+#if UNITY_EDITOR
+        // 에디터에서는 Assets의 상위 폴더가 프로젝트 루트
+        return Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
+#else
+        // 빌드된 플레이어에서는 실행 파일 위치 기준
+        string exePath = Application.dataPath;
+        if (Application.platform == RuntimePlatform.WindowsPlayer)
+            return Path.GetFullPath(Path.Combine(exePath, ".."));
+        else if (Application.platform == RuntimePlatform.OSXPlayer)
+            return Path.GetFullPath(Path.Combine(exePath, "../../"));
+        else
+            return Application.persistentDataPath; // 기타 플랫폼은 안전한 저장소 사용
+#endif
+    }
+
+    private string lastJsonPath => Path.Combine(GetProjectRootPath(), "Data", fileName);
 
     JObject lastJson;
 
@@ -42,7 +59,7 @@ public class GameCreator : MonoBehaviour
 
     private void InitFromLastJsonFile()
     {
-        // 마지막 json 파일이 있으면 불러와서 적용
+        // 프로젝트 루트(Assets와 같은 레벨)에 json 파일이 있으면 불러와서 적용
         if (File.Exists(lastJsonPath))
         {
             string jsonText = File.ReadAllText(lastJsonPath);

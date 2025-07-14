@@ -7,13 +7,14 @@ using UnityEngine.UI;
 using System.IO;
 using UnityEngine.Events;
 using Newtonsoft.Json.Linq;
-using System.Text.RegularExpressions; // 추가
+using System.Text.RegularExpressions;
+using TMPro; // 추가
 
 public class PromptManager : MonoBehaviour
 {
     [Header("UI")]
     [SerializeField]
-    AdvancedInputField promptInputField;
+    TMP_InputField promptInputField;
     [SerializeField]
     AdvancedInputField assistantInputField;
     [SerializeField]
@@ -69,7 +70,7 @@ public class PromptManager : MonoBehaviour
 
     private IEnumerator GetAnswer()
     {
-        string userMessage = promptInputField.Text;
+        string userMessage = promptInputField.text;
         messages.Add(new UserChatMessage(userMessage));
         LogToFile($"[User]\n{userMessage}\n");
 
@@ -85,7 +86,7 @@ public class PromptManager : MonoBehaviour
 
         assistantInputField.Text = json["assistant"].Value<string>();
 
-        promptInputField.Text = "";
+        promptInputField.text = "";
         EnableUI(true);
     }
 
@@ -111,12 +112,16 @@ public class PromptManager : MonoBehaviour
         if (string.IsNullOrEmpty(input))
             return input;
 
-        // 1) 맨 앞의 ``` 또는 ```json + 개행 제거
-        input = Regex.Replace(input, @"\A```(?:json)?\r?\n", "");
-
-        // 2) 맨 뒤의 ``` 제거
-        input = Regex.Replace(input, @"\r?\n```$", "");
-
-        return input;
+        // ``` 또는 ```json 으로 감싸진 부분만 추출
+        var match = Regex.Match(input, @"```(?:json)?\r?\n([\s\S]*?)\r?\n```", RegexOptions.Multiline);
+        if (match.Success)
+        {
+            return match.Groups[1].Value;
+        }
+        else
+        {
+            // ```가 없으면 원본 반환
+            return input;
+        }
     }
 }

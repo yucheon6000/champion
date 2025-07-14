@@ -13,7 +13,6 @@ public class StatOverTime : IComponent
     public override void Init(Entity entity)
     {
         base.Init(entity);
-        print("fgg");
 
         // 시작 시 Coroutine 시작
         statChangeCoroutine = entity.StartCoroutine(ChangeStatOverTime());
