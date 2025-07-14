@@ -75,8 +75,8 @@
     }
   },
   "controllers": [
-    { "type": "Controller2D", "description": "Move Left/Right" },
-    { "type": "ControllerButton", "description": "Jump", "keyCode": "Space" }
+    { "type": "Controller2D", "id":"MoveController"},
+    { "type": "ControllerButton", "id":"JumpButton", "keyCode": "Space" }
   ],
   "camera": { "fov": 6.0 }
 }

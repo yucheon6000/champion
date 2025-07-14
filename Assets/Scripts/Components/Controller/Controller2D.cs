@@ -8,6 +8,7 @@ public class Controller2D : Controller
 {
     [SerializeField]
     public UnityEvent<Vector2> OnValueUpdated { private set; get; } = new UnityEvent<Vector2>();
+    public Vector2 Direction { private set; get; } = Vector2.zero;
 
     public override void FromJson(JObject json)
     {
@@ -21,6 +22,8 @@ public class Controller2D : Controller
         Vector2 dir = Vector2.zero;
         dir.x = Input.GetAxisRaw("Horizontal");
         dir.y = Input.GetAxisRaw("Vertical");
+
+        Direction = dir;
 
         OnValueUpdated.Invoke(dir.normalized);
     }

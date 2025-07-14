@@ -65,11 +65,11 @@ Input methods for player interaction:
 "controllers": [
   {
     "type": "Controller2D",       // For directional movement
-    "description": "Movement"
+    "id": "Movement"
   },
   {
     "type": "ControllerButton",   // For button actions
-    "description": "Shoot",
+    "id": "Shoot",
     "keyCode": "Space"            // Must match Unity KeyCode names
   }
 ]

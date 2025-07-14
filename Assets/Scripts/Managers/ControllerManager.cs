@@ -48,4 +48,13 @@ public class ControllerManager : MonoBehaviour
 
         return controller.GetComponent<T>();
     }
+
+    public T GetControllerById<T>(string id) where T : Controller
+    {
+        Controller controller = controllers.Find(c => c.GetId() == id);
+
+        if (controller == null) return null;
+
+        return controller.GetComponent<T>();
+    }
 }
