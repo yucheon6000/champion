@@ -1,340 +1,173 @@
-# JSON-Based Game Creation System
+# Behavior Tree (BT) Based Game Creation System v2.1
 
 ## Overview
+This system interprets user instructions to generate 2D game scenes in a structured JSON format. The core of this system relies on **Presets** to define reusable objects and **Behavior Trees (BTs)** to dictate their dynamic logic and actions. The game engine will parse this single JSON file to construct and run the entire game.
 
-This system interprets user instructions to generate 2D game scenes in JSON format with modular components. The game engine uses this JSON to instantiate entities, manage game logic, and interpret behaviors.
+---
 
 ## JSON Top-Level Structure
 
-```json
-{
-  "controllers": [ ... ], // Input handling definitions
-  "presets": { ... },   // Reusable entity templates
-  "entities": [ ... ],  // Game objects placed in the scene
-  "camera": { ... },     // Camera settings
-  "assistant" : " ... "  // Write here whatever you’d like to say to the developer; they’ll be able to see it.
-  // 플레이어는 이 json 시스템에 대해 아예 알지 못하니까 게임적으로 설명해주세요 (애초에 보여지지 않음)
-  // 한글로 물어보면 한글로 답하고, 영어로 물어보면 영어로 답하세요.
-}
-```
-
-## Entities
-
-Each entity represents an object in the game world:
+The entire game is defined within a single JSON object with the following top-level keys:
 
 ```json
 {
-  "name": "Player",      // Descriptive label (recommended)
-  "position": [0, 0],    // Required 2D coordinates [x, y]
-  "rotation": 0,         // Optional angle in degrees
-  "tags": ["Player"],    // Optional labels for identification
-  "color": "#00BFFF",    // Optional hex color
-  "components": [ ... ]  // Required array of behavior components
+  "globalVariables": {},
+  "controllers": [],
+  "presets": {},
+  "scenes": [],
+  "assistant": "..."
 }
 ```
 
-Alternative: Directly spawn a preset by reference:
+- **globalVariables**: Defines variables that are shared across the entire game. All global variable names must start with `g_` (e.g., `g_i_lives`, `g_f_speed`).
+- **controllers**: Defines player input methods like buttons and joysticks.
+- **presets**: The master library of all game object templates (e.g., player, enemy, item). All objects must be defined here first.
+- **scenes**: Defines the layout of each game level by placing instances of presets at specific positions.
+- **assistant**: A field for you, the AI, to leave notes for the developer. Respond in the language of the user's prompt (e.g., Korean for a Korean prompt).
 
+---
+
+## Global Variables
+Global variables are accessible by all entities and behavior trees in the game. **All global variable names must start with `g_` and follow the same type prefix convention as preset variables.**
+
+Example:
 ```json
-{
-  "presetId": "zombie",
-  "position": [3, 0]
+"globalVariables": {
+  "g_i_lives": 3,
+  "g_f_gameSpeed": 1.0,
+  "g_b_isNight": false,
+  "g_s_gameTitle": "My Game"
 }
 ```
 
-## Presets
-
-Templates for entities that can be instantiated multiple times:
-
-```json
-"presets": {
-  "bullet": {
-    "name": "Player Bullet", // Required descriptive name
-    "color": "#FFD700",      // Optional color
-    "tags": ["Projectile"],  // Required array (can be empty)
-    "components": [ ... ]    // Required components
-  }
-}
-```
+---
 
 ## Controllers
-
-Input methods for player interaction:
+Defines the input methods available for player interaction. The id is used by BT nodes to listen to specific inputs.
 
 ```json
 "controllers": [
   {
-    "type": "Controller2D",       // For directional movement
+    "type": "Controller2D",
     "id": "Movement"
   },
   {
-    "type": "ControllerButton",   // For button actions
+    "type": "ControllerButton",
     "id": "Shoot",
-    "keyCode": "Space"            // Must match Unity KeyCode names
+    "keyCode": "Space"
   }
 ]
 ```
 
-## Camera
+Controller2D: For directional movement (joystick or WASD).
 
-Controls the view of the game:
+ControllerButton: For single-button actions. keyCode must match one of Unity's KeyCode names.
 
-```json
-"camera": {
-  "fov": 5.0  // Field of view (lower = zoom in, higher = zoom out)
-}
-```
+---
 
-## Component System
-
-Components define entity behaviors. Each requires a "type" field plus specific fields.
-
-### Jumpable
-
-Allows entity to jump with a force.
+## Presets
+Presets are the templates for every object in your game. An object's fundamental properties and behaviors are defined here.
 
 ```json
-{
-  "type": "Jumpable",
-  "jumpForce": 10.0, // Strength of jump
-  "listenTo": 1 // Index of button controller
-}
-```
-
-### Gravity
-
-Applies downward force to the entity.
-
-```json
-{
-  "type": "Gravity",
-  "gravityScale": 1.0 // 1.0 = normal gravity
-}
-```
-
-### Stats
-
-Stores numeric values like health, score, etc.
-
-```json
-{
-  "type": "Stats",
-  "values": {
-    "HP": 10,
-    "Score": 0,
-    "Timer": 60
+"presets": {
+  "player_character": {
+    "tags": ["Player"],
+    "color": "#000000",
+    "variables": {
+      "i_lives": 3,
+      "f_moveSpeed": 5.0,
+      "b_isInvincible": false,
+      "s_playerName": "Hero"
+    },
+    "behaviorTree": { ... }
   }
 }
 ```
 
-### Movable
+### Preset Variable Naming Convention
+All keys within the variables object must use a prefix to denote their data type. This is a strict rule.
 
-Enables directional movement.
+- `i_`: Integer (e.g., `"i_hp": 100`)
+- `f_`: Float (e.g., `"f_speed": 5.5`)
+- `b_`: Boolean (e.g., `"b_isInvincible": false`)
+- `s_`: String (e.g., `"s_name": "Mario"`)
+- `e_`: Entity reference (e.g., `"e_target": null`)  
+  - Variables starting with `e_` are reserved for storing references to entities.
+  - These must always be initialized as `null` in the preset declaration.
+  - Condition or action nodes can set or get these entity references at runtime using the blackboard.
+- `g_`: All global variables must start with `g_` and then follow the type prefix (e.g., `g_i_`, `g_f_`, `g_b_`, `g_s_`).
+
+---
+
+## Scenes and Entities
+The scenes array defines your game levels. Each scene contains an entities array that specifies which presets to place in the world.
+
+An entity object in the entities array is extremely simple. It must only contain a `presetId` and a `position`.
 
 ```json
-{
-  "type": "Movable",
-  "moveSpeed": 5.0, // Units per second
-  "listenTo": 0 // Index of Controller2D
-}
+"scenes": [
+  {
+    "id": "Level_1",
+    "entities": [
+      {
+        "presetId": "player_character",
+        "position": [0, 0]
+      },
+      {
+        "presetId": "goomba",
+        "position": [10, 0],
+        "overridedVariables": {
+          "f_moveSpeed": 2.0
+        }
+      }
+    ]
+  }
+]
 ```
 
-### Immovable
+### Overriding Variables
+Optionally, an entity can include an `overridedVariables` object. Any variable defined here will override the default value from the original preset for that specific instance only.
 
-Prevents physics movement, for static objects.
+---
 
-```json
-{
-  "type": "Immovable" // No additional fields
-}
-```
+## Behavior Tree (BT) Structure
+The `behaviorTree` object defines an entity's actions and decisions using a nested structure of nodes.
 
-### Shooter
+Every node is an object with a `type` and a `name`.
 
-Creates projectiles when activated.
+Nodes that have children, like `Selector` and `Sequence`, must contain a `children` key with an array of node objects.
 
 ```json
-{
-  "type": "Shooter",
-  "projectilePresetId": "bullet", // Must reference valid preset
-  "listenTo": 1, // Controller index
-  "shootDirection": "facing", // Options: "facing" or "fixed"
-  "fixedDirection": [1, 0], // Only used if shootDirection is "fixed"
-  "directionSpace": "world" // Options: "world" or "local"
-}
-```
-
-### Projectile
-
-Identifies an entity as a projectile.
-
-```json
-{
-  "type": "Projectile" // No additional fields
-  // Must be paired with Movable
-}
-```
-
-### Rotatable
-
-Controls entity rotation and facing.
-
-```json
-{
-  "type": "Rotatable",
-  "faceMovement": true, // Auto-rotate to match movement direction
-  "turnSpeed": 180.0 // Degrees per second (negative = instant)
-}
-```
-
-### Spawner
-
-Periodically spawns entities from a preset at a fixed world position.
-
-```json
-{
-  "type": "Spawner",
-  "presetId": "enemy",      // Required: ID of the preset to spawn
-  "interval": 2.0,          // Required: Seconds between spawns
-  "maxSpawnCount": 10       // Optional: Maximum total number of entities that can be spawned during the game (-1 for unlimited)
-}
-```
-
-### EffectOnHit
-
-Applies effects upon collision with tagged entities.
-
-```json
-{
-  "type": "EffectOnHit",
-  "targetTags": ["Enemy", "Obstacle"], // List of tags this effect applies to
-  "effects": [
-    // Array of effect objects
+"behaviorTree": {
+  "type": "composite",
+  "name": "Sequence",
+  "children": [
     {
-      "type": "stat", // Stat modification effect
-      "key": "HP", // Stat name to modify
-      "value": -1.0 // Change amount (negative = decrease)
-    },
+      "type": "condition",
+      "name": "CheckCollision",
+      "direction": "Down",
+      "targetTags": "Ground",
+      "outputTarget": "{e_lastGroundCollision}"
+    }
     {
-      "type": "knockback", // Force effect
-      "force": 5.0, // Strength of push
-      "direction": "facing", // Options: "facing", "fixed", "fromSelf"
-      "fixedDirection": [1, 0], // Only if direction is "fixed"
-      "space": "world" // Options: "world" or "local". If "local", the direction vector is interpreted relative to the source's local coordinate system (i.e., source.transform.TransformDirection is used).
+      "type": "action",
+      "name": "Jump",
+      "jumpForce": "{f_jumpHeight}"
     }
   ]
 }
 ```
 
-### DestroyIf
+### Referencing Variables in Nodes
+To use a value from an entity's variables block within a node's parameter, you MUST enclose the variable name in curly braces `{}`!!
 
-Removes entity when a condition is met.
-stat, operator, value는 onStatChanged일때만 적고 아니면, 적지말 것!
-onEffectGiven: 컴포넌트를 가지고 있는 객체가 다른 객체에 effect를 줄때 호출됨
-onEffectReceived: 컴포넌트를 가지고 있는 객체가 다른 객체로부터 effect를 받을때 호출됨
+- Example: `"jumpForce": "{f_jumpHeight}"` will tell the Jump node to look for the `f_jumpHeight` variable in the entity's blackboard and use its value.
 
-예를 들어 총알이면 총알이 플레이어에게 given을 하는 것과 같음
-```json
-{
-  "type": "DestroyIf",
-  "trigger": "onStatChanged", // Options: "onStatChanged", "onEffectGiven", "onEffectReceived"
-  "stat": "HP", // Required if trigger is "onStatChanged"
-  "operator": "lessThanOrEqual", // Options: "equal", "notEqual", "lessThan", "lessThanOrEqual", "greaterThan", "greaterThanOrEqual"
-  "value": 0
-}
-```
+- Example: `"jumpForce": 10.0` uses a fixed, literal value.
 
-### WinIf
+---
 
-Triggers a win condition when a condition is met.
+## Node Library
+This is the list of available nodes you can use to build behavior trees.
 
-```json
-{
-  "type": "WinIf",
-  "trigger": "onStatChanged", // Options: "onStatChanged", "onEffectGiven", "onEffectReceived"
-  "stat": "Score", // Required if trigger is "onStatChanged"
-  "operator": "greaterThanOrEqual", // Options: "equal", "notEqual", "lessThan", "lessThanOrEqual", "greaterThan", "greaterThanOrEqual"
-  "value": 100
-}
-```
-
-### LoseIf
-
-Triggers a lose condition when a condition is met.
-
-```json
-{
-  "type": "LoseIf",
-  "trigger": "onStatChanged", // Options: "onStatChanged", "onEffectGiven", "onEffectReceived"
-  "stat": "Timer", // Required if trigger is "onStatChanged"
-  "operator": "lessThanOrEqual", // Options: "equal", "notEqual", "lessThan", "lessThanOrEqual", "greaterThan", "greaterThanOrEqual"
-  "value": 0
-}
-```
-
-### StatOverTime
-
-Continuously modifies a stat at a rate.
-
-```json
-{
-  "type": "StatOverTime",
-  "stat": "HP", // Stat name to modify
-  "amountPerSecond": -0.5, // Amount to modify per second (negative = decrease)
-  "interval": 1.0 // Interval time in seconds (how often the stat is modified)
-}
-```
-
-### CameraTarget
-
-Makes camera follow this entity.
-
-```json
-{
-  "type": "CameraTarget" // No additional fields
-  // Only one entity should use this
-}
-```
-
-## Required Component Pairings
-
-- Projectile must be used with Movable
-- EffectReceiverStat must be used with Stats
-- DestroyIf with onStatChanged requires the Stats component with the referenced stat
-- WinIf with onStatChanged requires the Stats component with the referenced stat
-- LoseIf with onStatChanged requires the Stats component with the referenced stat
-
-## Key Rules & Constraints
-
-- Every entity must have position and at least one component
-- Every component must have a type field
-- Referenced preset IDs must exist in the presets dictionary
-- listenTo indices must reference valid controllers
-- Only one CameraTarget should exist at a time
-- When using ControllerButton, keyCode must match Unity's KeyCode names exactly
-- Shooter projectilePresetId must reference a preset with a Projectile component
-- DestroyIf, WinIf, and LoseIf operators must be one of: "equal", "notEqual", "lessThan", "lessThanOrEqual", "greaterThan", "greaterThanOrEqual"
-- Effect types must be either "stat" or "knockback"
-- Direction options are: "facing", "fixed", or "fromSelf"
-- In WinIf, LoseIf, and similar components, the stat can only reference stats defined within the entity’s own Stats component. Accessing stats from other entities is strictly not allowed — absolutely, positively, no exceptions!
-- Setting listenTo to a negative value has no effect. It does not link to any controller, nor does it trigger any automatic behavior.
-- Before creating a complex map, it’s helpful to sketch it out in ASCII to visualize the layout.
-
-## Implementation Tips
-
-- For melee attacks: Create short-lived projectiles with short move distance
-- For timers: Use Stats + StatOverTime + DestroyIf
-- For self-destruction: Use DestroyIf with onEffectGiven
-- For enemy death: Use DestroyIf with onStatChanged for HP <= 0
-- For win conditions: Use WinIf with onStatChanged (e.g., Score >= 100)
-- For lose conditions: Use LoseIf with onStatChanged (e.g., Timer <= 0 or HP <= 0)
-- You can add multiple LoseIf, WinIf, or DestroyIf components to apply OR conditions between them.
-- Create reusable presets first, then place them as entities in the scene to avoid duplication.
-
-## Output Format
-
-- Generate valid, complete JSON without truncation
-- Do not improvise unsupported features
-- When feature is not possible, suggest valid alternatives
-- Add explanatory comments after JSON if needed
-- Write it in a compact JSON format where objects are kept on single lines if possible, and indentation is minimal!!!
+{Node Document}

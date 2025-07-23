@@ -32,16 +32,50 @@ public class PromptManager : MonoBehaviour
 
     public UnityEvent<JObject> OnGetNewPrompt { private set; get; } = new UnityEvent<JObject>();
 
+    private void Start()
+    {
+        print(NodeDocumentationGenerator.GenerateNodeDocumentation());
+    }
+
+    private string GetProjectRootPath()
+    {
+#if UNITY_EDITOR
+        // In the editor, the project root is the parent of Assets
+        return Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
+#else
+        // In builds, use executable location
+        string exePath = Application.dataPath;
+        if (Application.platform == RuntimePlatform.WindowsPlayer)
+            return Path.GetFullPath(Path.Combine(exePath, ".."));
+        else if (Application.platform == RuntimePlatform.OSXPlayer)
+            return Path.GetFullPath(Path.Combine(exePath, "../../"));
+        else
+            return Application.persistentDataPath; // Safe storage for other platforms
+#endif
+    }
+
+    // 로그 파일을 프로젝트 루트의 Data 폴더에 저장
+    private string GetLogFilePath(string fileName)
+    {
+        string dataFolder = Path.Combine(GetProjectRootPath(), "Data");
+        if (!Directory.Exists(dataFolder))
+        {
+            Directory.CreateDirectory(dataFolder);
+        }
+        return Path.Combine(dataFolder, fileName);
+    }
+
     public void Reset()
     {
         messages.Clear();
 
         // 날짜+시간 기반 파일명 (예: PromptLog_20240422_153012.txt)
         string fileName = $"PromptLog_{System.DateTime.Now:yyyyMMdd_HHmmss}.txt";
-        logFilePath = Path.Combine(Application.persistentDataPath, fileName);
+        logFilePath = GetLogFilePath(fileName);
         File.WriteAllText(logFilePath, $"[Prompt Log Created {System.DateTime.Now}]\n");
 
         string systemMessage = Resources.Load<TextAsset>(systemPromptFileName).text;
+        systemMessage = systemMessage.Replace("{Node Document}", NodeDocumentationGenerator.GenerateNodeDocumentation());
         messages.Add(new SystemChatMessage(systemMessage));
         LogToFile($"[System]\n{systemMessage}\n");
     }
@@ -100,9 +134,8 @@ public class PromptManager : MonoBehaviour
     {
         if (string.IsNullOrEmpty(logFilePath))
         {
-            // fallback: 새 파일 생성
-            string fileName = $"PromptLog_{System.DateTime.Now:yyyyMMdd_HHmmss}.txt";
-            logFilePath = Path.Combine(Application.persistentDataPath, fileName);
+            string fileName = $"PromptLog_{System.DateTime.Now:yyyyMMdd_HHmms}.txt";
+            logFilePath = GetLogFilePath(fileName);
         }
         File.AppendAllText(logFilePath, $"{System.DateTime.Now:yyyy-MM-dd HH:mm:ss} {log}\n");
     }

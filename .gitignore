@@ -5,6 +5,10 @@
 openai-api-key.txt
 openai-api-key.txt.meta
 
+*.py
+
+Data/Prompt**
+
 ### macOS ###
 # General
 .DS_Store

@@ -10,10 +10,11 @@ public class Entity : MonoBehaviour
 {
     [Header("Read Only!")]
     [SerializeField]
-    private List<string> Tags = new List<string>();
+    private List<string> tags = new List<string>();
+    public List<string> Tags => tags;
 
-    [SerializeField]
-    private List<IComponent> components;
+    // [SerializeField]
+    // private List<IComponent> components;
 
     [Header("Stats UI")]
     [SerializeField]
@@ -22,14 +23,20 @@ public class Entity : MonoBehaviour
     [SerializeField]
     private GameObject statUIPrefab;
 
+    private Blackboard blackboard = new Blackboard();
+    public Blackboard Blackboard => blackboard;
+
+    private BehaviorTreeRunner behaviorTreeRunner;
+    public BehaviorTreeRunner BehaviorTreeRunner => behaviorTreeRunner;
+
     public JObject ToJson()
     {
         var json = new JObject();
 
-        var componentsJArray = new JArray();
-        foreach (IComponent component in components)
-            componentsJArray.Add(component.ToJson());
-        json.Add("components", componentsJArray);
+        // var componentsJArray = new JArray();
+        // foreach (IComponent component in components)
+        //     componentsJArray.Add(component.ToJson());
+        // json.Add("components", componentsJArray);
 
         // Color
         var renderer = GetComponent<SpriteRenderer>();
@@ -41,6 +48,9 @@ public class Entity : MonoBehaviour
 
     public void FromJson(JObject json)
     {
+        // Set variables to blackboard
+        blackboard = new Blackboard();
+
         // Set tags
         if (json.TryGetValue("tags", out var tagToken) && tagToken is JArray tagArray)
             foreach (var tag in tagArray)
@@ -56,14 +66,33 @@ public class Entity : MonoBehaviour
             }
         }
 
-        // Add default components to the 'components' list.
-        components = GetComponents<IComponent>().ToList();
-        foreach (var c in components)
-            c.Added(this);
+        // Set variables to blackboard
+        if (json.TryGetValue("variables", out JToken variablesToken) && variablesToken is JObject variablesObj)
+        {
+            blackboard.SetFromJson(variablesObj);
+        }
 
-        // Add components from json.
-        JArray componentsJArray = (JArray)json["components"];
-        AddComponentByJson(componentsJArray);
+        // Set a root node for a BT runner.
+        if (json.TryGetValue("behaviorTree", out JToken rootNodeToken))
+        {
+            JObject rootNodeJson = rootNodeToken as JObject;
+            if (rootNodeJson != null)
+            {
+                Node rootNode = BehaviorTreeFactory.CreateNodeFromJson(rootNodeJson);
+                rootNode.FromJson(rootNodeJson);
+
+                RequiresBTComponentAttribute[] allRequiredAttrs = rootNode.GetRequiredBTComponents();
+
+                var uniqueComponentTypes = allRequiredAttrs.Select(attr => attr.RequiredComponentType).Distinct();
+                foreach (var type in uniqueComponentTypes)
+                {
+                    if (GetComponent(type) == null)
+                        gameObject.AddComponent(type);
+                }
+
+                behaviorTreeRunner = new BehaviorTreeRunner(this, rootNode);
+            }
+        }
 
         // Initialize all components
         InitAllComponents();
@@ -74,29 +103,11 @@ public class Entity : MonoBehaviour
 
     public bool HasTag(string tag) => Tags.Contains(tag);
 
-    private void AddComponentByJson(JArray jsonArray)
-    {
-
-        foreach (JObject json in jsonArray)
-        {
-            string typeName = json["type"].Value<string>();
-            Type type = Type.GetType(typeName);
-
-            if (type == null) continue;
-
-            IComponent component = (IComponent)gameObject.AddComponent(type);
-            component.FromJson(json);
-
-            components.Add(component);
-            component.Added(this);
-        }
-    }
-
     private void InitAllComponents()
     {
-        // Initialize all the added components.
-        foreach (IComponent component in components)
-            component.Init(this);
+        // // Initialize all the added components.
+        // foreach (IComponent component in components)
+        //     component.Init(this);
     }
 
     private void InitStatsUI()
@@ -130,6 +141,8 @@ public class Entity : MonoBehaviour
 
         // UI 위치 갱신
         statsUIParent.position = screenPos;
+
+        BehaviorTreeRunner?.Execute();
     }
 
     private void OnDestroy()

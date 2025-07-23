@@ -73,7 +73,7 @@ public class EntityManager : MonoBehaviour
             return CreateEntityFromJson(combinedJson, pos);
         }
 
-        return CreateEntityFromJson(json, pos);
+        return null;
     }
 
     // Default

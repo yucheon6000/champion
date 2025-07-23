@@ -1,0 +1,46 @@
+---
+description: "This rule guides the development of the behavior tree (BT) system, which is being transitioned from a component-based structure. It helps maintain a consistent structure when adding or modifying BT nodes."
+---
+
+# Behavior Tree (BT) Development Guide
+
+The project is currently transitioning from a component-based architecture to a Behavior Tree (BT) architecture. To ensure consistency, please follow the guidelines below when developing the BT.
+
+## 1. BT Core Components
+
+- **`BehaviorTreeRunner`**: Executes the behavior tree. All game entities that use BT should have this component. Reference: `[Assets/Scripts/BehaviorTree/BehaviorTreeRunner.cs](mdc:Assets/Scripts/BehaviorTree/BehaviorTreeRunner.cs)`
+- **`BehaviorTreeFactory`**: Creates the behavior tree structure. It is used to build the tree from a data source (e.g., JSON). Reference: `[Assets/Scripts/BehaviorTree/BehaviorTreeFactory.cs](mdc:Assets/Scripts/BehaviorTree/BehaviorTreeFactory.cs)`
+- **`Blackboard`**: A shared data storage used by nodes within the BT. It stores the state and variables required for the BT's operation. Reference: `[Assets/Scripts/BehaviorTree/Blackboard.cs](mdc:Assets/Scripts/BehaviorTree/Blackboard.cs)`
+
+## 2. BT Node Structure
+
+All BT nodes inherit from `INode`. The nodes are categorized into `BranchNodes` (control flow) and `LeafNodes` (execution).
+
+-   **`INode` Interface**: The common interface for all nodes. Reference: `[Assets/Scripts/BehaviorTree/Nodes/INode.cs](mdc:Assets/Scripts/BehaviorTree/Nodes/INode.cs)`
+
+### 2.1. Branch Nodes
+
+`BranchNodes` are nodes that have one or more children and control the execution flow of the tree. They are located in `Assets/Scripts/BehaviorTree/Nodes/BranchNodes`.
+
+-   **`CompositeNode`**: A node that can have multiple children. `Sequence` and `Selector` inherit from this.
+-   **`Sequence`**: Executes its children sequentially until one of them fails.
+-   **`Selector`**: Executes its children sequentially until one of them succeeds.
+-   **`DecoratorNode`**: Modifies the behavior of its single child node.
+
+When adding a new branch node, it must inherit from `BranchNode` and be placed in the appropriate directory.
+
+### 2.2. Leaf Nodes
+
+`LeafNodes` are the terminal nodes of the tree that perform actions or check conditions. They do not have children and are located in `Assets/Scripts/BehaviorTree/Nodes/LeafNodes`.
+
+-   **`Actions`**: Nodes that perform a specific action (e.g., jump, move). When adding a new action, create a class in `Assets/Script for Game/Nodes/Actions`.
+-   **`Conditions`**: Nodes that check a specific condition (e.g., IsGrounded, IsPlayerPressing). When adding a new condition, create a class in `Assets/Script for Game/Nodes/Conditions`.
+
+## 3. Creating New Nodes
+
+When creating a new node, please adhere to the following directory structure:
+
+-   **New Action Node**: `Assets/Script for Game/Nodes/Actions/`
+-   **New Condition Node**: `Assets/Script for Game/Nodes/Conditions/`
+
+By following this guide, we can maintain a clean and organized BT structure, making the project more manageable as it grows.

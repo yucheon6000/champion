@@ -1,6 +1,6 @@
 using Newtonsoft.Json.Linq;
 
-public class Gravity : ComponentUsingRigidbody2D
+public class Gravity_ : ComponentUsingRigidbody2D
 {
     private float gravityScale = 0;
 

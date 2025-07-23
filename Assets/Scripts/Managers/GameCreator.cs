@@ -105,6 +105,10 @@ public class GameCreator : MonoBehaviour
 
     private void InitFromJson(JObject json)
     {
+        // 글로벌 변수 초기화
+        JObject globalVariablesObj = (JObject)json["globalVariables"];
+        Blackboard.SetGlobalFromJson(globalVariablesObj);
+
         // json 파일 저장
         File.WriteAllText(lastJsonPath, json.ToString());
 
@@ -116,17 +120,28 @@ public class GameCreator : MonoBehaviour
         JObject presetsJObject = (JObject)json["presets"];
         presetManager.Init(presetsJObject);
 
+        /*
         // Set camera (optional)
         if (json.TryGetValue("camera", out JToken cameraToken))
         {
             cameraManager.Init((JObject)cameraToken);
         }
+        */
 
         // Set entities.
-        JArray entitiesJArray = (JArray)json["entities"];
-        foreach (JObject entityJson in entitiesJArray)
+        JArray scenesJArray = (JArray)json["scenes"];
+        foreach (JObject sceneJson in scenesJArray)
         {
-            entityManager.CreateEntityFromJson(entityJson);
+            JArray entitiesJArray = (JArray)sceneJson["entities"];
+            foreach (JObject entityJson in entitiesJArray)
+            {
+                entityManager.CreateEntityFromJson(entityJson);
+            }
         }
+
+        // catch (System.Exception ex)
+        // {
+        //     Debug.LogWarning($"Failed to create game from Json: {ex.Message}");
+        // }
     }
 }

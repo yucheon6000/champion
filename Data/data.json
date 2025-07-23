@@ -1,458 +1,257 @@
 {
+  "globalVariables": {
+    "g_i_score": 0,
+    "g_b_gameFinished": false
+  },
   "controllers": [
     {
       "type": "Controller2D",
-      "description": "Movement"
+      "id": "Movement"
     },
     {
       "type": "ControllerButton",
-      "description": "Jump",
+      "id": "JumpButton",
       "keyCode": "Space"
-    },
-    {
-      "type": "ControllerButton",
-      "description": "Shoot",
-      "keyCode": "LeftControl"
     }
   ],
   "presets": {
-    "platform": {
-      "name": "Platform",
-      "color": "#654321",
-      "tags": [
-        "Platform"
-      ],
-      "components": [
-        {
-          "type": "Immovable"
-        }
-      ]
-    },
-    "lava": {
-      "name": "Lava",
-      "color": "#FF4500",
-      "tags": [
-        "Hazard"
-      ],
-      "components": [
-        {
-          "type": "Immovable"
-        },
-        {
-          "type": "EffectOnHit",
-          "targetTags": [
-            "Player"
-          ],
-          "effects": [
-            {
-              "type": "stat",
-              "key": "HP",
-              "value": -999
-            }
-          ]
-        }
-      ]
-    },
-    "coin": {
-      "name": "Coin",
-      "color": "#FFFF00",
-      "tags": [
-        "Coin"
-      ],
-      "components": [
-        {
-          "type": "EffectOnHit",
-          "targetTags": [
-            "Player"
-          ],
-          "effects": [
-            {
-              "type": "stat",
-              "key": "Score",
-              "value": 1
-            }
-          ]
-        },
-        {
-          "type": "DestroyIf",
-          "trigger": "onEffectGiven"
-        }
-      ]
-    },
-    "bullet": {
-      "name": "Bullet",
-      "color": "#FFD700",
-      "tags": [
-        "Projectile"
-      ],
-      "components": [
-        {
-          "type": "Projectile"
-        },
-        {
-          "type": "Movable",
-          "moveSpeed": 15
-        },
-        {
-          "type": "EffectOnHit",
-          "targetTags": [
-            "Monster"
-          ],
-          "effects": [
-            {
-              "type": "stat",
-              "key": "HP",
-              "value": -1
-            }
-          ]
-        },
-        {
-          "type": "DestroyIf",
-          "trigger": "onEffectGiven"
-        }
-      ]
-    },
-    "monster": {
-      "name": "Monster",
-      "color": "#800080",
-      "tags": [
-        "Monster"
-      ],
-      "components": [
-        {
-          "type": "Movable",
-          "moveSpeed": 1
-        },
-        {
-          "type": "Stats",
-          "values": {
-            "HP": 1
-          }
-        },
-        {
-          "type": "EffectOnHit",
-          "targetTags": [
-            "Player"
-          ],
-          "effects": [
-            {
-              "type": "stat",
-              "key": "HP",
-              "value": -999
-            }
-          ]
-        },
-        {
-          "type": "DestroyIf",
-          "trigger": "onStatChanged",
-          "stat": "HP",
-          "operator": "lessThanOrEqual",
-          "value": 0
-        }
-      ]
-    },
     "player": {
-      "name": "Mario",
-      "color": "#0000FF",
       "tags": [
         "Player"
       ],
-      "components": [
-        {
-          "type": "Movable",
-          "moveSpeed": 5,
-          "listenTo": 0
-        },
-        {
-          "type": "Jumpable",
-          "jumpForce": 12,
-          "listenTo": 1
-        },
-        {
-          "type": "Gravity",
-          "gravityScale": 3
-        },
-        {
-          "type": "Stats",
-          "values": {
-            "HP": 1,
-            "Score": 0
+      "color": "#0000FF",
+      "variables": {
+        "i_lives": 3,
+        "f_moveSpeed": 5,
+        "f_jumpForce": 10,
+        "b_isGrounded": false,
+        "e_groundEntity": null
+      },
+      "behaviorTree": {
+        "type": "composite",
+        "name": "Selector",
+        "children": [
+          {
+            "type": "composite",
+            "name": "Sequence",
+            "children": [
+              {
+                "type": "condition",
+                "name": "CheckCollision",
+                "direction": "down",
+                "targetTags": [
+                  "Ground",
+                  "Platform"
+                ],
+                "collisionType": "stay",
+                "outputTarget": "{e_groundEntity}"
+              },
+              {
+                "type": "action",
+                "name": "MoveByController",
+                "controllerId": "Movement",
+                "moveSpeed": "{f_moveSpeed}"
+              },
+              {
+                "type": "condition",
+                "name": "IsButtonDown",
+                "buttonId": "JumpButton"
+              },
+              {
+                "type": "action",
+                "name": "Jump",
+                "jumpForce": "{f_jumpForce}"
+              }
+            ]
+          },
+          {
+            "type": "action",
+            "name": "MoveByController",
+            "controllerId": "Movement",
+            "moveSpeed": "{f_moveSpeed}"
           }
+        ]
+      }
+    },
+    "goomba": {
+      "tags": [
+        "Enemy"
+      ],
+      "color": "#FF0000",
+      "variables": {
+        "f_moveSpeed": 2,
+        "b_isAlive": true
+      },
+      "behaviorTree": {
+        "type": "composite",
+        "name": "Sequence",
+        "children": [
+          {
+            "type": "action",
+            "name": "MoveByController",
+            "controllerId": "Movement",
+            "moveSpeed": "{f_moveSpeed}"
+          }
+        ]
+      }
+    },
+    "coin": {
+      "tags": [
+        "Collectible"
+      ],
+      "color": "#FFFF00",
+      "variables": {},
+      "behaviorTree": {
+        "type": "composite",
+        "name": "Sequence",
+        "children": [
+          {
+            "type": "condition",
+            "name": "CheckCollision",
+            "direction": "any",
+            "targetTags": [
+              "Player"
+            ],
+            "collisionType": "enter",
+            "outputTarget": "{e_player}"
+          },
+          {
+            "type": "action",
+            "name": "DestroyMyself"
+          }
+        ]
+      }
+    },
+    "flag": {
+      "tags": [
+        "Goal"
+      ],
+      "color": "#00FF00",
+      "variables": {},
+      "behaviorTree": {
+        "type": "composite",
+        "name": "Sequence",
+        "children": [
+          {
+            "type": "condition",
+            "name": "CheckCollision",
+            "direction": "any",
+            "targetTags": [
+              "Player"
+            ],
+            "collisionType": "enter"
+          }
+        ]
+      }
+    },
+    "ground": {
+      "tags": [
+        "Ground"
+      ],
+      "color": "#654321",
+      "variables": {},
+      "behaviorTree": {
+        "type": "composite",
+        "name": "Sequence",
+        "children": []
+      }
+    },
+    "platform": {
+      "tags": [
+        "Platform"
+      ],
+      "color": "#A0522D",
+      "variables": {},
+      "behaviorTree": {
+        "type": "composite",
+        "name": "Sequence",
+        "children": []
+      }
+    }
+  },
+  "scenes": [
+    {
+      "id": "Level_1",
+      "entities": [
+        {
+          "presetId": "player",
+          "position": [
+            0,
+            2
+          ]
         },
         {
-          "type": "LoseIf",
-          "trigger": "onStatChanged",
-          "stat": "HP",
-          "operator": "lessThanOrEqual",
-          "value": 0
+          "presetId": "goomba",
+          "position": [
+            5,
+            0
+          ]
         },
         {
-          "type": "WinIf",
-          "trigger": "onStatChanged",
-          "stat": "Score",
-          "operator": "equal",
-          "value": 7
+          "presetId": "coin",
+          "position": [
+            3,
+            3
+          ]
         },
         {
-          "type": "Rotatable",
-          "faceMovement": true,
-          "turnSpeed": -1
+          "presetId": "ground",
+          "position": [
+            -5,
+            -1
+          ]
         },
         {
-          "type": "Shooter",
-          "projectilePresetId": "bullet",
-          "listenTo": 2,
-          "shootDirection": "facing",
-          "directionSpace": "local"
+          "presetId": "platform",
+          "position": [
+            0,
+            1
+          ]
         },
         {
-          "type": "CameraTarget"
+          "presetId": "platform",
+          "position": [
+            2,
+            1
+          ]
+        },
+        {
+          "presetId": "platform",
+          "position": [
+            4,
+            1
+          ]
+        },
+        {
+          "presetId": "platform",
+          "position": [
+            6,
+            1
+          ]
+        },
+        {
+          "presetId": "platform",
+          "position": [
+            8,
+            1
+          ]
+        },
+        {
+          "presetId": "platform",
+          "position": [
+            10,
+            1
+          ]
+        },
+        {
+          "presetId": "flag",
+          "position": [
+            10,
+            0
+          ]
         }
       ]
     }
-  },
-  "entities": [
-    {
-      "presetId": "platform",
-      "position": [
-        0,
-        0
-      ]
-    },
-    {
-      "presetId": "platform",
-      "position": [
-        2,
-        0
-      ]
-    },
-    {
-      "presetId": "lava",
-      "position": [
-        5,
-        0
-      ]
-    },
-    {
-      "presetId": "platform",
-      "position": [
-        4,
-        1
-      ]
-    },
-    {
-      "presetId": "platform",
-      "position": [
-        6,
-        0
-      ]
-    },
-    {
-      "presetId": "lava",
-      "position": [
-        7,
-        0
-      ]
-    },
-    {
-      "presetId": "coin",
-      "position": [
-        3,
-        1
-      ]
-    },
-    {
-      "presetId": "coin",
-      "position": [
-        8,
-        2
-      ]
-    },
-    {
-      "presetId": "platform",
-      "position": [
-        8,
-        1
-      ]
-    },
-    {
-      "presetId": "platform",
-      "position": [
-        10,
-        0
-      ]
-    },
-    {
-      "presetId": "lava",
-      "position": [
-        11,
-        0
-      ]
-    },
-    {
-      "presetId": "platform",
-      "position": [
-        12,
-        0
-      ]
-    },
-    {
-      "presetId": "coin",
-      "position": [
-        13,
-        1
-      ]
-    },
-    {
-      "presetId": "platform",
-      "position": [
-        14,
-        1
-      ]
-    },
-    {
-      "presetId": "lava",
-      "position": [
-        15,
-        0
-      ]
-    },
-    {
-      "presetId": "platform",
-      "position": [
-        16,
-        0
-      ]
-    },
-    {
-      "presetId": "lava",
-      "position": [
-        17,
-        0
-      ]
-    },
-    {
-      "presetId": "coin",
-      "position": [
-        18,
-        2
-      ]
-    },
-    {
-      "presetId": "platform",
-      "position": [
-        18,
-        1
-      ]
-    },
-    {
-      "presetId": "platform",
-      "position": [
-        20,
-        0
-      ]
-    },
-    {
-      "presetId": "lava",
-      "position": [
-        21,
-        0
-      ]
-    },
-    {
-      "presetId": "platform",
-      "position": [
-        22,
-        0
-      ]
-    },
-    {
-      "presetId": "coin",
-      "position": [
-        23,
-        1
-      ]
-    },
-    {
-      "presetId": "platform",
-      "position": [
-        24,
-        1
-      ]
-    },
-    {
-      "presetId": "lava",
-      "position": [
-        25,
-        0
-      ]
-    },
-    {
-      "presetId": "platform",
-      "position": [
-        26,
-        0
-      ]
-    },
-    {
-      "presetId": "lava",
-      "position": [
-        27,
-        0
-      ]
-    },
-    {
-      "presetId": "coin",
-      "position": [
-        28,
-        2
-      ]
-    },
-    {
-      "presetId": "platform",
-      "position": [
-        28,
-        1
-      ]
-    },
-    {
-      "presetId": "platform",
-      "position": [
-        29,
-        0
-      ]
-    },
-    {
-      "presetId": "player",
-      "position": [
-        0,
-        2
-      ]
-    },
-    {
-      "presetId": "monster",
-      "position": [
-        5,
-        1
-      ]
-    },
-    {
-      "presetId": "monster",
-      "position": [
-        15,
-        1
-      ]
-    },
-    {
-      "presetId": "monster",
-      "position": [
-        25,
-        1
-      ]
-    }
   ],
-  "camera": {
-    "fov": 7
-  },
-  "assistant": "플레이어 근처 용암(위치 1,0)을 제거했고, 총알 발사를 위한 Shooter 컴포넌트를 플레이어에게 추가했습니다. 'LeftControl' 키를 누르면 플레이어가 바라보는 방향으로 총알을 쏩니다. 몬스터 3마리를 보라색으로 만들고 플랫폼 위 중간 위치에 배치했으며, 몬스터에 닿으면 플레이어가 즉시 죽도록 설정했습니다."
+  "assistant": "플레이어와 코인의 Y좌표를 플랫폼의 Y좌표보다 위로 올렸습니다. 플랫폼이 플레이어보다 아래에 위치합니다."
 }

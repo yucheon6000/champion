@@ -5,13 +5,16 @@ using UnityEngine;
 
 public enum NodeState
 {
-    Running, Success, Failure
+    Running, Success, Failure,
+    None
 }
 
 public interface INode
 {
-    public NodeState Evaluate(Entity entity);
+    public NodeState Evaluate();
 
     public JObject ToJson();
     public void FromJson(JObject json);
 }
+
+public interface IUsableNode { }

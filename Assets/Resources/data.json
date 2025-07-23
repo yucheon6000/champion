@@ -1,4 +1,10 @@
 {
+  "globalVariables": {
+    "g_i_lives": 3,
+    "g_f_gameSpeed": 1.0,
+    "g_b_isNight": false,
+    "g_s_gameTitle": "My Game"
+  },
   "entities": [
     {
       "name": "Player", "position": [0, 0], "tags": ["Player"], "color": "#00BFFF",

@@ -12,7 +12,7 @@ public class Controller2D : Controller
 
     public override void FromJson(JObject json)
     {
-
+        base.FromJson(json);
     }
 
     protected override string GetComponentType() => "Controller2D";

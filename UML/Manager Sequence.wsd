@@ -1,0 +1,83 @@
+@startuml
+
+participant  GameCreator
+participant  ControllerManager
+participant  PresetManager
+participant  CameraManager
+participant  EntityManager
+participant  WinLoseManager
+participant  PromptManager
+
+== Start ==
+[-> GameCreator: <font color=red><b> Start()
+activate GameCreator
+
+group GameCreator.StopGame
+    
+    group GameCreator.ResetAllManagers 
+      
+        GameCreator -> ControllerManager: Reset()
+            ControllerManager -> ControllerManager: Clear controllers.
+
+        GameCreator -> PresetManager: Reset()
+            PresetManager -> PresetManager: Clear preset map.
+
+        GameCreator -> CameraManager: Reset()
+            CameraManager -> CameraManager: Set camera position to original position.
+
+        GameCreator -> EntityManager: ClearAllEntities()
+            EntityManager -> EntityManager: Destroy all entities in the scene.
+
+        GameCreator -> WinLoseManager: Reset()
+    end
+
+    group GameCreator.InitFromLastJsonFile
+        GameCreator -> GameCreator: Read a last json file.
+
+        group GameCreator.InitFromJson
+            GameCreator -> ControllerManager: Init(controllersJArray)
+                ControllerManager -> ControllerManager: Create controllers with json.
+
+            GameCreator -> PresetManager: Init(presetsJArray)
+                PresetManager -> PresetManager: Set presets into map with json.
+
+            GameCreator -> CameraManager: Init(cameraToken)
+
+            group for entityJson in entitiesJArray
+                GameCreator -> EntityManager: CreateEntityFromJson(entityJson)
+                    EntityManager -> EntityManager: Create an entity with json.
+            end
+        end
+    end
+    
+    GameCreator -> GameCreator: Time.timeScale = 0
+end
+
+GameCreator -> PromptManager: Init()
+GameCreator -> PromptManager: OnGetNewPrompt.AddListener(OnGetNewJson)
+GameCreator -> PromptManager: AddLastJson(lastJson.ToString())
+
+[<- GameCreator
+deactivate GameCreator
+
+== Play Game ==
+[-> GameCreator: <font color=red><b> PlayGame()
+activate GameCreator
+GameCreator -> GameCreator: Time.timeScale = 1
+[<- GameCreator
+deactivate GameCreator
+
+
+
+== PromptManager.OnGetNewPrompt.Invoke(json) ==
+PromptManager -> GameCreator: <font color=red><b> OnGetNewJson(json)
+activate GameCreator
+
+GameCreator -> GameCreator: ResetAllManagers()
+GameCreator -> GameCreator: Time.timeScale = 0
+GameCreator -> GameCreator: InitFromJson(json)
+deactivate GameCreator
+
+====
+
+@enduml

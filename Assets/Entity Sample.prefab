@@ -50,7 +50,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 474fc663dceb9477ebfa6077dc6f7cd9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  components: []
+  Tags: []
   statsUIParent: {fileID: 4743979973682241636}
   statUIPrefab: {fileID: 4091240828366385794, guid: a5656b8f6a0434012b80adf88d752f7c, type: 3}
 --- !u!212 &654059600025932494
@@ -176,7 +176,7 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 4
+  m_Constraints: 7
 --- !u!114 &5564127227161445660
 MonoBehaviour:
   m_ObjectHideFlags: 0

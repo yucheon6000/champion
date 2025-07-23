@@ -1,0 +1,239 @@
+@startuml
+
+class Entity {}
+
+Entity *-- Blackboard
+class Blackboard {
+    + Has(string varName)
+    ..Setters..
+    + SetInt(string varName, int value)
+    + SetFloat(string varName, float value)
+    + SetBool(string varName, bool value)
+    + SetString(string varName, string value)
+    ..Getters..
+    + GetInt(string varName)
+    + GetFloat(string varName)
+    + GetBool(string varName)
+    + GetString(string varName)
+}
+
+Entity *-- BehaviorTreeRunner
+BehaviorTreeRunner *-- Node
+class BehaviorTreeRunner {}
+
+
+enum NodeState {
+    Running
+    Success
+    Failure
+}
+
+interface INode {
+    __
+    + NodeState Evaleate()
+    ..Json-Related..
+    + JObject ToJson()
+    + void FromJson(JObject json)
+}
+
+INode <|.. Node
+abstract class Node {
+    # Node parentNode
+    # Entity entity
+    __
+    + void SetParent(Node parentNode)
+    + void Init(Entity entity)
+    ..Abstract methods..
+    + {abstract} NodeState Evaluate()
+    + {abstract} JObject ToJson()
+    + {abstract} void FromJson(JObject json)
+}
+
+Node <|-- LeafNode
+abstract class LeafNode {}
+
+LeafNode <|-- ActionNode
+abstract class ActionNode {
+    + JObject ToJson()
+}
+
+LeafNode <|-- ConditionNode
+abstract class ConditionNode {
+    + JObject ToJson()
+}
+
+
+Node <|-- BranchNode
+abstract class BranchNode {
+    + {abstract} void AddChildNode(Node childNode)
+}
+
+
+BranchNode <|-- DecoratorNode
+abstract class DecoratorNode {
+    # Node ChildNode
+
+    + void AddChildNode(Node childNode)
+    + void RemoveChildNode()
+}
+
+BranchNode <|-- CompositeNode
+abstract class CompositeNode {
+    # List<Node> childrenNodes
+
+    + void AddChildNode(Node childNode)
+    + void AddChildrenNodes(IEnumerable<Node> childrenNodes)
+    + void RemoveChildNode(Node childNode)
+    + void RemoveAllChildrenNodes()
+}
+
+CompositeNode <|-- SequenceNode
+class SequenceNode {
+    + NodeState Evaluate()
+    + void FromJson(JObject json)
+    + JObject ToJson()
+}
+
+CompositeNode <|-- SelectorNode
+class SelectorNode {
+    + NodeState Evaluate()
+    + void FromJson(JObject json)
+    + JObject ToJson()
+}
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+' class Rigidbody2D
+' hide Rigidbody2D members
+
+
+class Movement <<Component>> ##[bold]red {
+
+}
+
+'''''''''''''''''''''''''''''''''''Actions'''''''''''''''''''''''''''''''''''''
+
+ActionNode <|-- WaitForSeconds
+class WaitForSeconds ##[bold]red {
+    - float duration
+    - float startTime
+    - bool isWaiting
+
+    + NodeState Evaluate()
+}
+
+ActionNode <|-- MoveByController
+MoveByController --> Movement
+class MoveByController ##[bold]red {
+    - string controllerId
+    - Controller2D controller
+
+    - Movement movement
+
+    - string moveSpeedVarName
+    - float moveSpeed
+    - float MoveSpeed
+
+    + NodeState Evaluate()
+    + void FromJson(JObject json)
+    + JObject ToJson()
+}
+
+ActionNode <|-- Jump
+Jump --> Movement
+class Jump ##[bold]red {
+    - string controllerId
+    - ControllerButton controller
+
+    - Movement movement
+
+    - string jumpForceVarName
+    - float jumpForce
+    - float JumpForce
+
+    + NodeState Evaluate()
+    + void FromJson(JObject json)
+    + JObject ToJson()
+}
+
+ActionNode <|-- FireProjectile
+class FireProjectile {
+
+}
+
+ActionNode <|-- Win
+class Win {
+
+}
+
+ActionNode <|-- Lose
+class Lose {
+
+}
+
+' class Move {
+
+' }
+
+' class CreateObject {} 
+
+'''''''''''''''''''''''''''''''''''Conditions'''''''''''''''''''''''''''''''''''''
+ConditionNode <|-- IsButtonPressed
+class IsButtonPressed ##[bold]red {
+}
+
+ConditionNode <|-- IsOnGround
+IsOnGround --> Movement
+class IsOnGround ##[bold]red {
+    - Movement movement
+
+    + NodeState Evaluate()
+    + void FromJson(JObject json)
+    + JObject ToJson()
+}
+
+ConditionNode <|-- ComparisonNode
+abstract class ComparisonNode ##[bold]red {
+    # string targetVarName
+    # float valueToCompare
+
+    + void FromJson(JObject json)
+    + JObject ToJson()
+}
+
+ComparisonNode <|-- IsGreaterThan
+class IsGreaterThan {
+    + NodeState Evaluate()
+    + void FromJson(JObject json)
+    + JObject ToJson()
+}
+
+ComparisonNode <|-- IsLessThan
+class IsLessThan {
+    + NodeState Evaluate()
+    + void FromJson(JObject json)
+    + JObject ToJson()
+}
+
+ComparisonNode <|-- IsEqualTo
+class IsEqualTo {
+    + NodeState Evaluate()
+    + void FromJson(JObject json)
+    + JObject ToJson()
+}
+
+ComparisonNode <|-- IsGreaterOrEqualTo
+class IsGreaterOrEqualTo {
+    + NodeState Evaluate()
+    + void FromJson(JObject json)
+    + JObject ToJson()
+}
+
+ComparisonNode <|-- IsLessOrEqualTo
+class IsLessOrEqualTo {
+    + NodeState Evaluate()
+    + void FromJson(JObject json)
+    + JObject ToJson()
+}
+
+@enduml
