@@ -161,6 +161,8 @@ Nodes that have children, like `Selector` and `Sequence`, must contain a `childr
 ### Referencing Variables in Nodes
 To use a value from an entity's variables block within a node's parameter, you MUST enclose the variable name in curly braces `{}`!!
 
+You can freely use any variables, whether they are global variables starting with "g_" or entity-specific variables. There are no restrictions on which variables you can reference.
+
 - Example: `"jumpForce": "{f_jumpHeight}"` will tell the Jump node to look for the `f_jumpHeight` variable in the entity's blackboard and use its value.
 
 - Example: `"jumpForce": 10.0` uses a fixed, literal value.
@@ -169,5 +171,6 @@ To use a value from an entity's variables block within a node's parameter, you M
 
 ## Node Library
 This is the list of available nodes you can use to build behavior trees.
+You MUST use only nodes we provide!!
 
 {Node Document}

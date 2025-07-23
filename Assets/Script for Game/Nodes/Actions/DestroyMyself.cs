@@ -16,7 +16,7 @@ public class DestroyMyself : ActionNode, IUsableNode
     public override JObject ToJson()
     {
         JObject json = base.ToJson();
-        json.Add("name", nameof(DestroyMyself));
+        json.Add("name", GetType().Name);
         return json;
     }
 

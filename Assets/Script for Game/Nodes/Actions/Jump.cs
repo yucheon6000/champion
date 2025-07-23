@@ -31,6 +31,7 @@ public class Jump : ActionNode, IUsableNode
     public override JObject ToJson()
     {
         JObject json = base.ToJson();
+        json.Add("name", GetType().Name);
         json.Add("jumpForce", jumpForce.ToJToken());
         return json;
     }

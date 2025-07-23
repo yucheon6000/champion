@@ -51,7 +51,7 @@ public class CheckCollision : ConditionNode, IUsableNode
     {
         JObject json = base.ToJson();
 
-        json.Add("name", nameof(CheckCollision));
+        json.Add("name", GetType().Name);
         json.Add("direction", direction);
         json.Add("targetTags", "[" + string.Join(",", targetTags) + "]");
         json.Add("collisionType", collisionType);
@@ -72,6 +72,6 @@ public class CheckCollision : ConditionNode, IUsableNode
             collisionType = typeToken.Value<string>();
 
         if (json.TryGetValue("outputTarget", out var keyToken))
-            outputTarget = new BTValue<Entity>((string)keyToken, null);
+            outputTarget = BTValue<Entity>.FromJToken(keyToken, null);
     }
 }

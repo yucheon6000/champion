@@ -11,4 +11,11 @@ public class IsButtonDown : ButtonCondition, IUsableNode
     {
         return controllerButton.IsButtonDown == true ? ReturnSuccess() : ReturnFailure();
     }
+
+    public override JObject ToJson()
+    {
+        JObject json = base.ToJson();
+        json.Add("name", GetType().Name);
+        return json;
+    }
 }

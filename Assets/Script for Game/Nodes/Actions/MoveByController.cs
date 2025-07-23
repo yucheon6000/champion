@@ -36,7 +36,7 @@ public class MoveByController : ActionNode, IUsableNode
     public override JObject ToJson()
     {
         JObject json = base.ToJson();
-        json.Add("name", "MoveByController");
+        json.Add("name", GetType().Name);
         json.Add("controllerId", controllerId);
         json.Add("moveSpeed", moveSpeed.ToJToken());
         return json;

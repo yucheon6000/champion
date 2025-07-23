@@ -31,17 +31,19 @@ public class WinLoseManager : MonoBehaviour
         lsoeEffect.SetActive(false);
     }
 
-    public void Win()
+    public bool Win()
     {
-        if (isFinished) return;
+        if (isFinished) return false;
         isFinished = true;
         winEffect.SetActive(true);
+        return true;
     }
 
-    public void Lose()
+    public bool Lose()
     {
-        if (isFinished) return;
+        if (isFinished) return false;
         isFinished = true;
         lsoeEffect.SetActive(true);
+        return true;
     }
 }

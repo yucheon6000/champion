@@ -17,10 +17,10 @@ public class NodeNameAttribute : Attribute
 
 public enum NodeParamType
 {
-    Bool, BoolOrVariable,
-    Int, IntOrVariable,
-    Float, FloatOrVariable,
-    String, StringOrVariable,
+    Bool, BoolOrVariable, BoolVariable,
+    Int, IntOrVariable, IntVariable,
+    Float, FloatOrVariable, FloatVariable,
+    String, StringOrVariable, StringVariable,
     EntityVariable,
     OneNode, Nodes,
     None
@@ -35,13 +35,17 @@ public class NodeParamAttribute : Attribute
 
     static Dictionary<NodeParamType, string> nodeParamTypeToString = new Dictionary<NodeParamType, string>() {
         { NodeParamType.Bool, "only bool" },
-        { NodeParamType.BoolOrVariable, "bool_or_{var}" },
+        { NodeParamType.BoolOrVariable, "bool_or_{b_var}" },
+        { NodeParamType.BoolVariable, "only {b_var}" },
         { NodeParamType.Int, "only int" },
-        { NodeParamType.IntOrVariable, "int_or_{var}" },
+        { NodeParamType.IntOrVariable, "int_or_{i_var}" },
+        { NodeParamType.IntVariable, "only {i_var}" },
         { NodeParamType.Float, "only float" },
-        { NodeParamType.FloatOrVariable, "float_or_{var}" },
+        { NodeParamType.FloatOrVariable, "float_or_{f_var}" },
+        { NodeParamType.FloatVariable, "only {f_var}" },
         { NodeParamType.String, "only string" },
-        { NodeParamType.StringOrVariable, "string_or_{var}" },
+        { NodeParamType.StringOrVariable, "string_or_{s_var}" },
+        { NodeParamType.StringVariable, "only {s_var}" },
         { NodeParamType.EntityVariable, "only {e_var}" },
         { NodeParamType.OneNode, "only one node object" },
         { NodeParamType.Nodes, "[node list]" }

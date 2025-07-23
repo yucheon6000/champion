@@ -1,7 +1,8 @@
 {
   "globalVariables": {
     "g_i_score": 0,
-    "g_b_gameFinished": false
+    "g_i_lives": 3,
+    "g_b_gameOver": false
   },
   "controllers": [
     {
@@ -10,22 +11,21 @@
     },
     {
       "type": "ControllerButton",
-      "id": "JumpButton",
-      "keyCode": "Space"
+      "id": "Jump",
+      "keyCode": "Z"
     }
   ],
   "presets": {
-    "player": {
+    "player_mario": {
       "tags": [
         "Player"
       ],
-      "color": "#0000FF",
+      "color": "#FF0000",
       "variables": {
         "i_lives": 3,
-        "f_moveSpeed": 5,
-        "f_jumpForce": 10,
-        "b_isGrounded": false,
-        "e_groundEntity": null
+        "f_moveSpeed": 5.0,
+        "f_jumpForce": 8.0,
+        "e_lastGroundCollision": null
       },
       "behaviorTree": {
         "type": "composite",
@@ -37,25 +37,24 @@
             "children": [
               {
                 "type": "condition",
-                "name": "CheckCollision",
-                "direction": "down",
-                "targetTags": [
-                  "Ground",
-                  "Platform"
-                ],
-                "collisionType": "stay",
-                "outputTarget": "{e_groundEntity}"
-              },
-              {
-                "type": "action",
-                "name": "MoveByController",
-                "controllerId": "Movement",
-                "moveSpeed": "{f_moveSpeed}"
+                "name": "IsButtonDown",
+                "buttonId": "Jump"
               },
               {
                 "type": "condition",
-                "name": "IsButtonDown",
-                "buttonId": "JumpButton"
+                "name": "CheckCollision",
+                "direction": "down",
+                "targetTags": [
+                  "Ground"
+                ],
+                "collisionType": "stay",
+                "outputTarget": "{e_lastGroundCollision}"
+              },
+              {
+                "type": "condition",
+                "name": "CompareEntityVariable",
+                "variable": "{e_lastGroundCollision}",
+                "operator": "is_not_null"
               },
               {
                 "type": "action",
@@ -73,77 +72,6 @@
         ]
       }
     },
-    "goomba": {
-      "tags": [
-        "Enemy"
-      ],
-      "color": "#FF0000",
-      "variables": {
-        "f_moveSpeed": 2,
-        "b_isAlive": true
-      },
-      "behaviorTree": {
-        "type": "composite",
-        "name": "Sequence",
-        "children": [
-          {
-            "type": "action",
-            "name": "MoveByController",
-            "controllerId": "Movement",
-            "moveSpeed": "{f_moveSpeed}"
-          }
-        ]
-      }
-    },
-    "coin": {
-      "tags": [
-        "Collectible"
-      ],
-      "color": "#FFFF00",
-      "variables": {},
-      "behaviorTree": {
-        "type": "composite",
-        "name": "Sequence",
-        "children": [
-          {
-            "type": "condition",
-            "name": "CheckCollision",
-            "direction": "any",
-            "targetTags": [
-              "Player"
-            ],
-            "collisionType": "enter",
-            "outputTarget": "{e_player}"
-          },
-          {
-            "type": "action",
-            "name": "DestroyMyself"
-          }
-        ]
-      }
-    },
-    "flag": {
-      "tags": [
-        "Goal"
-      ],
-      "color": "#00FF00",
-      "variables": {},
-      "behaviorTree": {
-        "type": "composite",
-        "name": "Sequence",
-        "children": [
-          {
-            "type": "condition",
-            "name": "CheckCollision",
-            "direction": "any",
-            "targetTags": [
-              "Player"
-            ],
-            "collisionType": "enter"
-          }
-        ]
-      }
-    },
     "ground": {
       "tags": [
         "Ground"
@@ -152,19 +80,7 @@
       "variables": {},
       "behaviorTree": {
         "type": "composite",
-        "name": "Sequence",
-        "children": []
-      }
-    },
-    "platform": {
-      "tags": [
-        "Platform"
-      ],
-      "color": "#A0522D",
-      "variables": {},
-      "behaviorTree": {
-        "type": "composite",
-        "name": "Sequence",
+        "name": "Selector",
         "children": []
       }
     }
@@ -174,84 +90,35 @@
       "id": "Level_1",
       "entities": [
         {
-          "presetId": "player",
+          "presetId": "player_mario",
           "position": [
             0,
-            2
-          ]
-        },
-        {
-          "presetId": "goomba",
-          "position": [
-            5,
             0
-          ]
-        },
-        {
-          "presetId": "coin",
-          "position": [
-            3,
-            3
           ]
         },
         {
           "presetId": "ground",
           "position": [
-            -5,
+            0,
             -1
           ]
         },
         {
-          "presetId": "platform",
+          "presetId": "ground",
           "position": [
-            0,
-            1
+            1,
+            -1
           ]
         },
         {
-          "presetId": "platform",
+          "presetId": "ground",
           "position": [
             2,
-            1
-          ]
-        },
-        {
-          "presetId": "platform",
-          "position": [
-            4,
-            1
-          ]
-        },
-        {
-          "presetId": "platform",
-          "position": [
-            6,
-            1
-          ]
-        },
-        {
-          "presetId": "platform",
-          "position": [
-            8,
-            1
-          ]
-        },
-        {
-          "presetId": "platform",
-          "position": [
-            10,
-            1
-          ]
-        },
-        {
-          "presetId": "flag",
-          "position": [
-            10,
-            0
+            -1
           ]
         }
       ]
     }
   ],
-  "assistant": "플레이어와 코인의 Y좌표를 플랫폼의 Y좌표보다 위로 올렸습니다. 플랫폼이 플레이어보다 아래에 위치합니다."
+  "assistant": "점프 조작 및 땅 체크는 제공된 노드인 IsButtonDown, CheckCollision, CompareEntityVariable, Jump, MoveByController 만 사용하여 구현했습니다. 별도의 커스텀 노드는 없으며 오직 공식 노드만으로 동작합니다."
 }

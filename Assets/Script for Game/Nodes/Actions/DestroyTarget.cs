@@ -22,7 +22,7 @@ public class DestroyTarget : ActionNode, IUsableNode
     public override JObject ToJson()
     {
         JObject json = base.ToJson();
-        json.Add("name", nameof(DestroyTarget));
+        json.Add("name", GetType().Name);
         json.Add("target", null);
         return json;
     }
