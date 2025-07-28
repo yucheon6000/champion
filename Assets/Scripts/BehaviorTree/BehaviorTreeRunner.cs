@@ -28,6 +28,9 @@ public class BehaviorTreeRunner
 
     public void Execute()
     {
+        if (nodeStates == null)
+            nodeStates = new Dictionary<Node, NodeState>();
+
         nodeStates.Clear();
 
         NodeState rootNodeState = rootNode.Evaluate();

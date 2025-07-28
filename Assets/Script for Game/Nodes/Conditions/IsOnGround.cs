@@ -3,23 +3,24 @@ using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
-[RequiresBTComponent(typeof(Movement))]
+[RequiresBTComponent(typeof(CollisionSensor))]
 
 [NodeName(nameof(IsOnGround))]
 [NodeDescription("Returns Success if the entity's feet are touching an object with the 'Ground' tag.")]
-public class IsOnGround : ConditionNode
+public class IsOnGround : ConditionNode, IUsableNode
 {
-    private Movement movement;
+    private CollisionSensor collisionSensor;
 
     protected override void GetBTComponents()
     {
         base.GetBTComponents();
-        movement = entity.GetComponent<Movement>();
+        collisionSensor = entity.GetComponent<CollisionSensor>();
     }
 
     public override NodeState Evaluate()
     {
-        return movement.IsOnGround() ? ReturnSuccess() : ReturnFailure();
+        return collisionSensor.TryGetRecentCollision("down", new string[] { "Ground" }, "stay", out Entity collidedEntity)
+                ? ReturnSuccess() : ReturnFailure();
     }
 
     public override JObject ToJson()
@@ -31,5 +32,6 @@ public class IsOnGround : ConditionNode
 
     public override void FromJson(JObject json)
     {
+
     }
 }

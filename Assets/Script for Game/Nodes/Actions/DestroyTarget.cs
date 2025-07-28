@@ -29,6 +29,6 @@ public class DestroyTarget : ActionNode, IUsableNode
 
     public override void FromJson(JObject json)
     {
-        target = new BTValue<Entity>(json["target"].ToObject<Entity>());
+        target = BTValue<Entity>.FromJToken(json["target"]);
     }
 }

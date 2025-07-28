@@ -8,6 +8,8 @@ public class Movement : MonoBehaviour
     private new Rigidbody2D rigidbody2D;
     private new Collider2D collider2D;
 
+    public Vector2 Velocity { get { return rigidbody2D.velocity; } }
+
     private void Start()
     {
         rigidbody2D = GetComponent<Rigidbody2D>();
@@ -18,7 +20,7 @@ public class Movement : MonoBehaviour
 
     public void Move(Vector2 direction, float speed)
     {
-        transform.position += (Vector3)direction * speed * Time.deltaTime;
+        rigidbody2D.velocity = new Vector2(direction.x * speed, rigidbody2D.velocity.y);
     }
 
     public void Jump(float jumpForce)

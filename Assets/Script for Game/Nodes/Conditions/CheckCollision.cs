@@ -14,7 +14,7 @@ using UnityEngine;
 [NodeDescription(
     "Returns Success if a recent collision (of the specified type) matches the given direction and target tags, saving the collided entity to the blackboard. Otherwise returns Failure. outputTargetKey is optional."
 )]
-public class CheckCollision : ConditionNode, IUsableNode
+public class CheckCollision : ConditionNode
 {
     private CollisionSensor sensor;
 
