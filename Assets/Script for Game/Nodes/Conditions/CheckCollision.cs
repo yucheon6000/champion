@@ -6,7 +6,6 @@ using UnityEngine;
 
 [RequiresBTComponent(typeof(CollisionSensor))]
 
-[NodeName(nameof(CheckCollision))]
 [CustomNodeParam("direction", "up|down|right|left|any", isRequired: true)]
 [CustomNodeParam("targetTags", "[string list]", isRequired: true)]
 [CustomNodeParam("collisionType", "enter|exit|stay", isRequired: true)]

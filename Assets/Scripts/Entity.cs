@@ -76,21 +76,29 @@ public class Entity : MonoBehaviour
         if (json.TryGetValue("behaviorTree", out JToken rootNodeToken))
         {
             JObject rootNodeJson = rootNodeToken as JObject;
-            if (rootNodeJson != null)
+            if (rootNodeJson != null && rootNodeJson.Count > 0)
             {
                 Node rootNode = BehaviorTreeFactory.CreateNodeFromJson(rootNodeJson);
-                rootNode.FromJson(rootNodeJson);
 
-                RequiresBTComponentAttribute[] allRequiredAttrs = rootNode.GetRequiredBTComponents();
-
-                var uniqueComponentTypes = allRequiredAttrs.Select(attr => attr.RequiredComponentType).Distinct();
-                foreach (var type in uniqueComponentTypes)
+                if (rootNode == null)
                 {
-                    if (GetComponent(type) == null)
-                        gameObject.AddComponent(type);
+                    Debug.LogWarning($"Failed to create root node from JSON: {rootNodeJson}");
                 }
+                else
+                {
+                    rootNode.FromJson(rootNodeJson);
 
-                behaviorTreeRunner = new BehaviorTreeRunner(this, rootNode);
+                    RequiresBTComponentAttribute[] allRequiredAttrs = rootNode.GetRequiredBTComponents();
+
+                    var uniqueComponentTypes = allRequiredAttrs.Select(attr => attr.RequiredComponentType).Distinct();
+                    foreach (var type in uniqueComponentTypes)
+                    {
+                        if (GetComponent(type) == null)
+                            gameObject.AddComponent(type);
+                    }
+
+                    behaviorTreeRunner = new BehaviorTreeRunner(this, rootNode);
+                }
             }
         }
 

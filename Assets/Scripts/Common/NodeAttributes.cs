@@ -8,13 +8,6 @@ public class NodeTypeAttribute : Attribute
     public NodeTypeAttribute(string type) { this.Type = type; }
 }
 
-[AttributeUsage(AttributeTargets.Class)]
-public class NodeNameAttribute : Attribute
-{
-    public string Name { get; }
-    public NodeNameAttribute(string name) { this.Name = name; }
-}
-
 public enum NodeParamType
 {
     Bool, BoolOrVariable, BoolVariable,

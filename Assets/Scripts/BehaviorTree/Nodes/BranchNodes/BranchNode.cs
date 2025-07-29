@@ -5,4 +5,9 @@ using UnityEngine;
 public abstract class BranchNode : Node
 {
     public abstract void AddChildNode(Node childNode);
+
+    protected override string EditorTreeViewerParams()
+    {
+        return "";
+    }
 }

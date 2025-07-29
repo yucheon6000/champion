@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
@@ -52,4 +53,29 @@ public abstract class Node : INode
 
     public abstract JObject ToJson();
     public abstract void FromJson(JObject json);
+
+    protected virtual string EditorTreeViewerParams()
+    {
+        JObject json = ToJson();
+        json.Remove("type");
+        json.Remove("name");
+
+        if (json.Count == 0)
+            return "";
+
+        string jsonString = json.ToString();
+        jsonString = jsonString.Replace("\"", "");
+        jsonString = jsonString.Replace("\n", "");
+        jsonString = jsonString.Replace("\r", "");
+        jsonString = jsonString.Replace("\t", "");
+        jsonString = jsonString.Replace(" ", "");
+        jsonString = jsonString.Replace(":", ": ");
+        jsonString = jsonString.Replace(",", ", ");
+        return $"{jsonString}";
+    }
+
+    public string EditorTreeViewer(NodeState nodeState)
+    {
+        return $"{GetType().Name} : {EditorTreeViewerParams()} [{nodeState}]";
+    }
 }

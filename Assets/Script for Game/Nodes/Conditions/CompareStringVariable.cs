@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
-[NodeName(nameof(CompareStringVariable))]
 [CustomNodeParam("variable", "only {s_var}", isRequired: true)]
 [CustomNodeParam("operator", "is_equal_to|is_not_equal_to", isRequired: true)]
 [CustomNodeParam("value", "string_or_{s_var}", isRequired: true)]

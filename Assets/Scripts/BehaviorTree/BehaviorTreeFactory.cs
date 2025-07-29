@@ -12,7 +12,7 @@ public class BehaviorTreeFactory
         string nodeName = (string)nodeJson["name"];
         if (string.IsNullOrEmpty(nodeName))
         {
-            Debug.LogError("JSON에 노드 'name'이 없습니다.");
+            Debug.LogWarning("JSON에 노드 'name'이 없습니다.");
             return null;
         }
 

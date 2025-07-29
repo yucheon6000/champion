@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
-[NodeName(nameof(Lose))]
 [NodeDescription("Makes the entity lose the game.")]
 public class Lose : ActionNode, IUsableNode
 {

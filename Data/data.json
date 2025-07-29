@@ -1,8 +1,6 @@
 {
   "globalVariables": {
-    "g_i_score": 0,
-    "g_i_lives": 3,
-    "g_b_gameOver": false
+    "g_i_score": 0
   },
   "controllers": [
     {
@@ -12,85 +10,322 @@
     {
       "type": "ControllerButton",
       "id": "Jump",
-      "keyCode": "Z"
+      "keyCode": "Space"
     }
   ],
   "presets": {
-    "player_mario": {
+    "player": {
       "tags": [
         "Player"
       ],
       "color": "#FF0000",
       "variables": {
-        "i_lives": 3,
-        "f_moveSpeed": 5.0,
-        "f_jumpForce": 8.0,
-        "e_lastGroundCollision": null
+        "f_moveSpeed": 6.0,
+        "f_jumpForce": 14.0,
+        "e_hitTarget": null
       },
       "behaviorTree": {
         "type": "composite",
         "name": "Selector",
+        "//": "Main player logic. Order of execution: Win > Lose > Interact > Move.",
         "children": [
           {
             "type": "composite",
             "name": "Sequence",
+            "//": "Win condition: Touch the Goal",
             "children": [
               {
                 "type": "condition",
-                "name": "IsButtonDown",
-                "buttonId": "Jump"
-              },
-              {
-                "type": "condition",
-                "name": "CheckCollision",
-                "direction": "down",
-                "targetTags": [
-                  "Ground"
-                ],
-                "collisionType": "stay",
-                "outputTarget": "{e_lastGroundCollision}"
-              },
-              {
-                "type": "condition",
-                "name": "CompareEntityVariable",
-                "variable": "{e_lastGroundCollision}",
-                "operator": "is_not_null"
+                "name": "OnHit",
+                "tags": [
+                  "Goal"
+                ]
               },
               {
                 "type": "action",
-                "name": "Jump",
-                "jumpForce": "{f_jumpForce}"
+                "name": "Win"
               }
             ]
           },
           {
-            "type": "action",
-            "name": "MoveByController",
-            "controllerId": "Movement",
-            "moveSpeed": "{f_moveSpeed}"
+            "type": "composite",
+            "name": "Sequence",
+            "//": "Lose condition: Hit an enemy from the side/below",
+            "children": [
+              {
+                "type": "condition",
+                "name": "OnHit",
+                "tags": [
+                  "Enemy"
+                ]
+              },
+              {
+                "type": "action",
+                "name": "Lose"
+              }
+            ]
+          },
+          {
+            "type": "composite",
+            "name": "Sequence",
+            "//": "Interaction: Stomp an enemy",
+            "children": [
+              {
+                "type": "condition",
+                "name": "OnStomp",
+                "tags": [
+                  "Enemy"
+                ],
+                "outputTarget": "{e_hitTarget}"
+              },
+              {
+                "type": "action",
+                "name": "DestroyTarget",
+                "target": "{e_hitTarget}"
+              },
+              {
+                "type": "action",
+                "name": "IncreaseVariable",
+                "variable": "{g_i_score}",
+                "amount": 10
+              }
+            ]
+          },
+          {
+            "type": "composite",
+            "name": "Sequence",
+            "//": "Interaction: Hit a question block from below",
+            "children": [
+              {
+                "type": "condition",
+                "name": "OnHeadHit",
+                "tags": [
+                  "QuestionBlock"
+                ],
+                "outputTarget": "{e_hitTarget}"
+              },
+              {
+                "type": "action",
+                "name": "IncreaseVariable",
+                "variable": "{g_i_score}",
+                "amount": 10
+              },
+              {
+                "type": "action",
+                "name": "DestroyTarget",
+                "target": "{e_hitTarget}"
+              }
+            ]
+          },
+          {
+            "type": "composite",
+            "name": "Sequence",
+            "//": "Interaction: Break a brick block from below",
+            "children": [
+              {
+                "type": "condition",
+                "name": "OnHeadHit",
+                "tags": [
+                  "BrickBlock"
+                ],
+                "outputTarget": "{e_hitTarget}"
+              },
+              {
+                "type": "action",
+                "name": "DestroyTarget",
+                "target": "{e_hitTarget}"
+              }
+            ]
+          },
+          {
+            "type": "composite",
+            "name": "Selector",
+            "//": "Handle movement and jumping",
+            "children": [
+              {
+                "type": "composite",
+                "name": "Sequence",
+                "//": "Jumping logic",
+                "children": [
+                  {
+                    "type": "condition",
+                    "name": "IsButtonDown",
+                    "buttonId": "Jump"
+                  },
+                  {
+                    "type": "condition",
+                    "name": "IsOnGround"
+                  },
+                  {
+                    "type": "action",
+                    "name": "Jump",
+                    "jumpForce": "{f_jumpForce}"
+                  }
+                ]
+              },
+              {
+                "type": "action",
+                "name": "MoveByController",
+                "//": "Horizontal movement",
+                "controllerId": "Movement",
+                "moveSpeed": "{f_moveSpeed}"
+              }
+            ]
           }
         ]
+      }
+    },
+    "goomba": {
+      "tags": [
+        "Enemy",
+        "Ground"
+      ],
+      "color": "#8B4513",
+      "variables": {},
+      "behaviorTree": {
+        "//": "Goombas are currently stationary as there is no autonomous Move action node."
       }
     },
     "ground": {
       "tags": [
         "Ground"
       ],
-      "color": "#654321",
+      "color": "#D2691E",
       "variables": {},
-      "behaviorTree": {
-        "type": "composite",
-        "name": "Selector",
-        "children": []
-      }
+      "behaviorTree": {}
+    },
+    "brick_block": {
+      "tags": [
+        "Ground",
+        "BrickBlock"
+      ],
+      "color": "#B22222",
+      "variables": {},
+      "behaviorTree": {}
+    },
+    "question_block": {
+      "tags": [
+        "Ground",
+        "QuestionBlock"
+      ],
+      "color": "#FFD700",
+      "variables": {},
+      "behaviorTree": {}
+    },
+    "pipe": {
+      "tags": [
+        "Ground"
+      ],
+      "color": "#008000",
+      "variables": {},
+      "behaviorTree": {}
+    },
+    "goal": {
+      "tags": [
+        "Goal"
+      ],
+      "color": "#E0E0E0",
+      "variables": {},
+      "behaviorTree": {}
     }
   },
   "scenes": [
     {
-      "id": "Level_1",
+      "id": "World_1-1",
       "entities": [
         {
-          "presetId": "player_mario",
+          "presetId": "player",
+          "position": [
+            -10,
+            1
+          ]
+        },
+        {
+          "presetId": "ground",
+          "position": [
+            -11,
+            0
+          ]
+        },
+        {
+          "presetId": "ground",
+          "position": [
+            -10,
+            0
+          ]
+        },
+        {
+          "presetId": "ground",
+          "position": [
+            -9,
+            0
+          ]
+        },
+        {
+          "presetId": "ground",
+          "position": [
+            -8,
+            0
+          ]
+        },
+        {
+          "presetId": "ground",
+          "position": [
+            -4,
+            0
+          ]
+        },
+        {
+          "presetId": "question_block",
+          "position": [
+            -3,
+            3
+          ]
+        },
+        {
+          "presetId": "brick_block",
+          "position": [
+            -2,
+            3
+          ]
+        },
+        {
+          "presetId": "question_block",
+          "position": [
+            -1,
+            3
+          ]
+        },
+        {
+          "presetId": "brick_block",
+          "position": [
+            0,
+            3
+          ]
+        },
+        {
+          "presetId": "goomba",
+          "position": [
+            -1,
+            1
+          ]
+        },
+        {
+          "presetId": "ground",
+          "position": [
+            -2,
+            0
+          ]
+        },
+        {
+          "presetId": "ground",
+          "position": [
+            -1,
+            0
+          ]
+        },
+        {
+          "presetId": "ground",
           "position": [
             0,
             0
@@ -99,26 +334,138 @@
         {
           "presetId": "ground",
           "position": [
-            0,
-            -1
-          ]
-        },
-        {
-          "presetId": "ground",
-          "position": [
             1,
-            -1
+            0
+          ]
+        },
+        {
+          "presetId": "pipe",
+          "position": [
+            3,
+            1
+          ]
+        },
+        {
+          "presetId": "pipe",
+          "position": [
+            3,
+            2
+          ]
+        },
+        {
+          "presetId": "pipe",
+          "position": [
+            5,
+            1
+          ]
+        },
+        {
+          "presetId": "pipe",
+          "position": [
+            5,
+            2
+          ]
+        },
+        {
+          "presetId": "pipe",
+          "position": [
+            5,
+            3
+          ]
+        },
+        {
+          "presetId": "goomba",
+          "position": [
+            8,
+            1
+          ]
+        },
+        {
+          "presetId": "goomba",
+          "position": [
+            9,
+            1
           ]
         },
         {
           "presetId": "ground",
           "position": [
-            2,
-            -1
+            8,
+            0
+          ]
+        },
+        {
+          "presetId": "ground",
+          "position": [
+            9,
+            0
+          ]
+        },
+        {
+          "presetId": "ground",
+          "position": [
+            10,
+            0
+          ]
+        },
+        {
+          "presetId": "ground",
+          "position": [
+            11,
+            0
+          ]
+        },
+        {
+          "presetId": "ground",
+          "position": [
+            12,
+            0
+          ]
+        },
+        {
+          "presetId": "ground",
+          "position": [
+            13,
+            0
+          ]
+        },
+        {
+          "presetId": "ground",
+          "position": [
+            14,
+            1
+          ]
+        },
+        {
+          "presetId": "ground",
+          "position": [
+            15,
+            2
+          ]
+        },
+        {
+          "presetId": "ground",
+          "position": [
+            16,
+            3
+          ]
+        },
+        {
+          "presetId": "ground",
+          "position": [
+            17,
+            3
+          ]
+        },
+        {
+          "presetId": "goal",
+          "position": [
+            17,
+            4
           ]
         }
       ]
     }
   ],
-  "assistant": "점프 조작 및 땅 체크는 제공된 노드인 IsButtonDown, CheckCollision, CompareEntityVariable, Jump, MoveByController 만 사용하여 구현했습니다. 별도의 커스텀 노드는 없으며 오직 공식 노드만으로 동작합니다."
+  "assistant": "안녕하세요! 요청하신 대로 클래식 마리오 스타일의 게임을 생성했습니다. 플레이어는 이동, 점프, 그리고 적을 밟아 처치할 수 있습니다. 물음표 블록이나 벽돌 블록을 아래에서 치면 점수를 얻거나 파괴할 수 있습니다. 현재 시스템의 제약으로 인해 적(굼바)은 좌우로 움직이지 않고 제자리에 서 있습니다. 레벨 끝에 있는 깃발에 도달하면 승리합니다. 즐겁게 플레이하세요!"
 }

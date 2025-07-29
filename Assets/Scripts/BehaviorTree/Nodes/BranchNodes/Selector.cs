@@ -4,7 +4,6 @@ using System.Linq;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
-[NodeName("Selector")]
 [NodeDescription("Executes child nodes in order until one succeeds. Returns Success if any child succeeds, otherwise")]
 public class Selector : CompositeNode, IUsableNode
 {

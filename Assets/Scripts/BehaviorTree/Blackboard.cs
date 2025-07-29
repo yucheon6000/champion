@@ -1,7 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Newtonsoft.Json.Linq; // JObject와 JToken을 사용하기 위해 추가
+using Newtonsoft.Json.Linq;
+using Unity.VisualScripting; // JObject와 JToken을 사용하기 위해 추가
 
 public class Blackboard
 {
@@ -94,6 +95,10 @@ public class Blackboard
 
         if (data.TryGetValue(key, out object value))
         {
+            // Entity는 기본값이 null이므로 타입이 맞지 않으면 기본값을 반환
+            if (typeof(T) == typeof(Entity) && value is null)
+                return defaultValue;
+
             // 저장된 값의 타입이 요청한 타입 T와 일치하는지 확인
             if (value is T typedValue)
             {

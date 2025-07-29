@@ -1,14 +1,16 @@
 using System.Collections;
 using System.Collections.Generic;
 using AdvancedInputFieldPlugin;
-using OpenAI.Chat;
 using UnityEngine;
 using UnityEngine.UI;
 using System.IO;
 using UnityEngine.Events;
 using Newtonsoft.Json.Linq;
 using System.Text.RegularExpressions;
-using TMPro; // 추가
+using TMPro;
+using System.Threading.Tasks;
+using GenerativeAI;
+using GenerativeAI.Types;
 
 public class PromptManager : MonoBehaviour
 {
@@ -22,12 +24,13 @@ public class PromptManager : MonoBehaviour
 
     [Header("AI")]
     [SerializeField]
-    private string model = "gpt-4.1-mini";
+    private string modelName = "gemini-1.5-pro";
     [SerializeField]
     private string systemPromptFileName = "SystemPrompt";
 
-    ChatClient client;
-    List<ChatMessage> messages = new List<ChatMessage>();
+    GoogleAi googleAi;
+    GenerativeModel model;
+    List<Content> messages = new List<Content>();
     private string logFilePath;
 
     public UnityEvent<JObject> OnGetNewPrompt { private set; get; } = new UnityEvent<JObject>();
@@ -76,13 +79,15 @@ public class PromptManager : MonoBehaviour
 
         string systemMessage = Resources.Load<TextAsset>(systemPromptFileName).text;
         systemMessage = systemMessage.Replace("{Node Document}", NodeDocumentationGenerator.GenerateNodeDocumentation());
-        messages.Add(new SystemChatMessage(systemMessage));
+        messages.Add(new Content { Role = "user", Parts = { new Part { Text = systemMessage } } });
         LogToFile($"[System]\n{systemMessage}\n");
     }
 
     public void Init()
     {
-        client = new(model: model, apiKey: Resources.Load("openai-api-key").ToString());
+        string apiKey = Resources.Load("gemini-api-key").ToString();
+        googleAi = new GoogleAi(apiKey);
+        model = googleAi.CreateGenerativeModel(modelName);
 
         Reset();
     }
@@ -98,28 +103,50 @@ public class PromptManager : MonoBehaviour
 
     public void AddLastJson(string json)
     {
-        messages.Add(new AssistantChatMessage(json));
+        messages.Add(new Content { Role = "model", Parts = { new Part { Text = json } } });
         LogToFile($"[Assistant]\n{json}\n");
     }
 
     private IEnumerator GetAnswer()
     {
+        // 프롬프트 입력 필드의 텍스트를 사용자 메시지로 추가
         string userMessage = promptInputField.text;
-        messages.Add(new UserChatMessage(userMessage));
+        messages.Add(new Content { Role = "user", Parts = { new Part { Text = userMessage } } });
         LogToFile($"[User]\n{userMessage}\n");
 
-        var result = client.CompleteChatAsync(messages);
+        // 메시지를 전송하고 결과를 기다림
+        var result = model.GenerateContentAsync(new GenerateContentRequest { Contents = messages });
         yield return new WaitUntil(() => result.IsCompleted);
 
-        string assistantMessage = result.Result.Value.Content[0].Text;
-        messages.Add(new AssistantChatMessage(assistantMessage));
-        LogToFile($"[Assistant]\n{assistantMessage}\n");
+        try
+        {
+            if (result.Exception != null)
+            {
+                Debug.LogError($"[PromptManager] API 호출 중 오류 발생: {result.Exception.Message}");
+                assistantInputField.Text = $"오류가 발생했습니다: {result.Exception.Message}";
+                EnableUI(true);
+                yield break;
+            }
 
-        JObject json = JObject.Parse(StripCodeFences(assistantMessage));
-        OnGetNewPrompt.Invoke(json);
+            // 결과를 사용자 메시지로 추가
+            string assistantMessage = result.Result.Text;
+            messages.Add(new Content { Role = "model", Parts = { new Part { Text = assistantMessage } } });
+            LogToFile($"[Assistant]\n{assistantMessage}\n");
 
-        assistantInputField.Text = json["assistant"].Value<string>();
+            // 결과를 파싱하고 이벤트 호출
+            JObject json = JObject.Parse(StripCodeFences(assistantMessage));
+            OnGetNewPrompt.Invoke(json);
 
+            // 결과를 입력 필드에 표시
+            assistantInputField.Text = json["assistant"].Value<string>();
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"[PromptManager] 예외 발생: {ex.Message}");
+            assistantInputField.Text = $"오류가 발생했습니다: {ex.Message}";
+        }
+
+        // 입력 필드 초기화
         promptInputField.text = "";
         EnableUI(true);
     }

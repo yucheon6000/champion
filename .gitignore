@@ -2,8 +2,8 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=macos,unity
 
 # API Keys
-openai-api-key.txt
-openai-api-key.txt.meta
+Assets/Resources/*-key.txt
+Assets/Resources/*-key.txt.meta
 
 *.py
 

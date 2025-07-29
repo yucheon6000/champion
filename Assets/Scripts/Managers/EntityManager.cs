@@ -70,7 +70,10 @@ public class EntityManager : MonoBehaviour
             foreach (var prop in json)
                 combinedJson[prop.Key] = prop.Value;
 
-            return CreateEntityFromJson(combinedJson, pos);
+            Entity entity = CreateEntityFromJson(combinedJson, pos);
+            entity.gameObject.name = $"{presetId} (Entity)";
+
+            return entity;
         }
 
         return null;

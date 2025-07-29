@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 
 [NodeType("composite")]
@@ -78,6 +79,10 @@ public abstract class CompositeNode : BranchNode
         foreach (JObject childJObject in childrenJArray)
         {
             Node childNode = BehaviorTreeFactory.CreateNodeFromJson(childJObject);
+
+            if (childNode == null)
+                continue;
+
             childNode.FromJson(childJObject);
 
             childrenNodes.Add(childNode);

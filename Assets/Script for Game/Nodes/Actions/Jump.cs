@@ -6,7 +6,6 @@ using UnityEngine;
 [RequiresBTComponent(typeof(Movement))]
 [RequiresBTComponent(typeof(Gravity))]
 
-[NodeName(nameof(Jump))]
 [NodeParam("jumpForce", NodeParamType.FloatOrVariable, isRequired: true)]
 [NodeDescription("Makes the entity perform a jump action using the specified jump force.")]
 public class Jump : ActionNode, IUsableNode

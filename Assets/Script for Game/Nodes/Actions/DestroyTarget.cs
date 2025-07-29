@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
-[NodeName(nameof(DestroyTarget))]
 [NodeParam("target", NodeParamType.EntityVariable)]
 [NodeDescription("Destroys the target entity.")]
 public class DestroyTarget : ActionNode, IUsableNode

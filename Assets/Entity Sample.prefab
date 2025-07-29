@@ -50,7 +50,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 474fc663dceb9477ebfa6077dc6f7cd9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Tags: []
+  tags: []
   statsUIParent: {fileID: 4743979973682241636}
   statUIPrefab: {fileID: 4091240828366385794, guid: a5656b8f6a0434012b80adf88d752f7c, type: 3}
 --- !u!212 &654059600025932494
@@ -114,7 +114,7 @@ BoxCollider2D:
   m_GameObject: {fileID: 3079394564872982110}
   m_Enabled: 1
   m_Density: 1
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 6200000, guid: 57ce4507294370a41b34499a9b4b5a88, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -166,7 +166,7 @@ Rigidbody2D:
   m_LinearDrag: 1
   m_AngularDrag: 0.05
   m_GravityScale: 0
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 6200000, guid: 57ce4507294370a41b34499a9b4b5a88, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0

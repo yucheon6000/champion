@@ -5,7 +5,6 @@ using UnityEngine;
 
 [RequiresBTComponent(typeof(CollisionSensor))]
 
-[NodeName(nameof(IsOnGround))]
 [NodeDescription("Returns Success if the entity's feet are touching an object with the 'Ground' tag.")]
 public class IsOnGround : ConditionNode, IUsableNode
 {

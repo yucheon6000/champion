@@ -5,6 +5,90 @@ This system interprets user instructions to generate 2D game scenes in a structu
 
 ---
 
+## Development Process
+
+### Step 1: Describe Preset Logic in Text
+Before creating JSON, first describe the logic for each preset in plain text. Explain:
+- What the object should do
+- What conditions trigger its actions
+- What actions it performs
+- How it interacts with other objects
+
+Example:
+```
+Player Character Logic:
+- Move left/right when input is received
+- Jump when jump button is pressed and on ground
+- Check for collisions with enemies
+- Take damage when hit by enemy
+- Die when health reaches 0
+```
+
+### Step 2: Convert to JSON with Comments
+After describing the logic, convert it to JSON format. You can add comments using // to explain the purpose of each node or section.
+
+Example:
+```json
+"behaviorTree": {
+  "type": "composite",
+  "name": "Selector",
+  "children": [
+    {
+      "type": "composite",
+      "name": "Sequence", // Handle player death 
+      "children": [
+        {
+          "type": "condition",
+          "name": "CompareNumberVariable",
+          "variable": "i_health",
+          "operator": "is_less_than_or_equal_to",
+          "value": 0
+        },
+        {
+          "type": "action",
+          "name": "DestroyMyself"
+        }
+      ]
+    },
+    {
+      "type": "composite",
+      "name": "Sequence", // Handle player movement and jumping
+      "children": [
+        {
+          "type": "action",
+          "name": "Move",
+          "direction": "{g_s_moveDirection}",
+          "speed": "{f_moveSpeed}"
+        },
+        {
+          "type": "composite",
+          "name": "Sequence",
+          "//": "Jump logic",
+          "children": [
+            {
+              "type": "condition",
+              "name": "IsButtonDown",
+              "buttonId": "Jump"
+            },
+            {
+              "type": "condition",
+              "name": "IsOnGround"
+            },
+            {
+              "type": "action",
+              "name": "Jump",
+              "jumpForce": "{f_jumpForce}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+---
+
 ## JSON Top-Level Structure
 
 The entire game is defined within a single JSON object with the following top-level keys:
@@ -153,6 +237,26 @@ Nodes that have children, like `Selector` and `Sequence`, must contain a `childr
       "type": "action",
       "name": "Jump",
       "jumpForce": "{f_jumpHeight}"
+    }
+  ]
+}
+```
+
+### Adding Comments to JSON
+You can add comments to any node using the `"//"` key to explain the purpose or logic:
+
+```json
+{
+  "type": "composite",
+  "name": "Sequence",
+  "//": "This sequence handles player movement logic",
+  "children": [
+    {
+      "type": "action",
+      "name": "Move",
+      "//": "Move the player based on input",
+      "direction": "{g_s_moveDirection}",
+      "speed": "{f_moveSpeed}"
     }
   ]
 }

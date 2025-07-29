@@ -5,10 +5,9 @@ using UnityEngine;
 
 [RequiresBTComponent(typeof(CollisionSensor))]
 
-[NodeName(nameof(OnHit))]
 [NodeParam("tags", NodeParamType.StringList, isRequired: true)]
 [NodeParam("outputTarget", NodeParamType.EntityVariable, isRequired: false)]
-[NodeDescription("Returns Success if the entity's body hits an object with the specified tags, saving the collided entity to the blackboard. Otherwise returns Failure. outputTarget is optional. Any direction is allowed.")]
+[NodeDescription("Returns Success if the entity's body (the object with this node) hits an object with the specified tags, saving the collided entity to the blackboard. Otherwise returns Failure. outputTarget is optional. Any direction is allowed.")]
 public class OnHit : ConditionNode, IUsableNode
 {
     private CollisionSensor collisionSensor;

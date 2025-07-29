@@ -5,7 +5,6 @@ using UnityEngine;
 
 [RequiresBTComponent(typeof(Movement))]
 
-[NodeName(nameof(MoveByController))]
 [NodeParam("controllerId", NodeParamType.String, isRequired: true)]
 [NodeParam("moveSpeed", NodeParamType.FloatOrVariable, isRequired: true)]
 [NodeDescription("Moves the entity in the direction provided by the controller, using the specified move speed.")]

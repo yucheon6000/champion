@@ -121,7 +121,7 @@ public class BehaviorTreeViewerEditor : Editor
 
         style.normal.textColor = color;
 
-        EditorGUILayout.LabelField($"{node.GetType().Name} [{execState}]", style);
+        EditorGUILayout.LabelField(node.EditorTreeViewer(execState), style);
 
         // CompositeNode
         if (node is CompositeNode composite)

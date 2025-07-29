@@ -17,7 +17,7 @@ public static class NodeDocumentationGenerator
 
         foreach (var type in nodeTypes)
         {
-            var nameAttr = type.GetCustomAttribute<NodeNameAttribute>();
+            var nameAttr = type.Name;
             if (nameAttr == null) continue; // 이름이 없는 노드는 건너뜀
 
             var typeAttr = type.GetCustomAttribute<NodeTypeAttribute>();
@@ -28,7 +28,7 @@ public static class NodeDocumentationGenerator
 
             // 1. type과 name 추가
             if (typeAttr != null) parts.Add($"\"type\": \"{typeAttr.Type}\"");
-            parts.Add($"\"name\": \"{nameAttr.Name}\"");
+            parts.Add($"\"name\": \"{nameAttr}\"");
 
             // 2. 파라미터들 추가
             foreach (var param in paramAttrs)

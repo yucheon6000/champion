@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
-[NodeName(nameof(CompareNumberVariable))]
 [CustomNodeParam("variable", "only {i_var}|only {f_var}", isRequired: true)]
 [CustomNodeParam("operator", "is_equal_to|is_not_equal_to|is_greater_than|is_greater_than_or_equal_to|is_less_than|is_less_than_or_equal_to", isRequired: true)]
 [CustomNodeParam("value", "int_or_{i_var}|float_or_{f_var}", isRequired: true)]

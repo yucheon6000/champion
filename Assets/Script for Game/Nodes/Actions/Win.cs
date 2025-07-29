@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
-[NodeName(nameof(Win))]
 [NodeDescription("Makes the entity win the game.")]
 public class Win : ActionNode, IUsableNode
 {

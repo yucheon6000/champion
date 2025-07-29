@@ -6,10 +6,9 @@ using UnityEngine;
 [RequiresBTComponent(typeof(Movement))]
 [RequiresBTComponent(typeof(CollisionSensor))]
 
-[NodeName(nameof(OnHeadHit))]
 [NodeParam("tags", NodeParamType.StringList, isRequired: true)]
 [NodeParam("outputTarget", NodeParamType.EntityVariable, isRequired: false)]
-[NodeDescription("Returns Success if the entity's head hits an object with the specified tags, saving the collided entity to the blackboard. Otherwise returns Failure. outputTarget is optional.")]
+[NodeDescription("Returns Success if this entity's head (the object with this node) hits an object with the specified tags, saving the collided entity to the blackboard. Otherwise returns Failure. outputTarget is optional.")]
 public class OnHeadHit : ConditionNode, IUsableNode
 {
     private Movement movement;
