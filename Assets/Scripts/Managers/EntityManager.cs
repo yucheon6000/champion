@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using GenerativeAI;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
@@ -20,19 +21,31 @@ public class EntityManager : MonoBehaviour
             Instance = this;
     }
 
+    private string ToPascalCase(string str)
+    {
+        string result = str.Replace("_", " ").ToCamelCase();
+        result = result[0].ToString().ToUpper() + result.Substring(1);
+        return result;
+    }
+
     public Entity CreateEntityFromPreset(string presetId)
         => CreateEntityFromPreset(presetId, Vector2.zero);
 
     // Default
-    public Entity CreateEntityFromPreset(string presetId, Vector3 position)
+    public Entity CreateEntityFromPreset(string presetId, Vector2 position)
     {
         JObject preestJson = PresetManager.Instance.GetPresetJson(presetId);
 
         if (preestJson == null) return null;
 
+        Debug.Log($"[EntityManager] CreateEntityFromPreset: {presetId}");
         Entity clone = CreateEntityFromJson(preestJson, position);
         if (clone != null)
+        {
+            clone.gameObject.name = $"{ToPascalCase(presetId)} (Entity)";
+            clone.SetPresetId(presetId);
             entities.Add(clone);
+        }
 
         return clone;
     }
@@ -53,30 +66,9 @@ public class EntityManager : MonoBehaviour
         else
             Debug.LogWarning("Position key not found in JSON. Using default position (0, 0).");
 
-        // ⭐ 프리셋 기반 처리
-        if (json.TryGetValue("presetId", out var presetToken))
-        {
-            string presetId = presetToken.Value<string>();
-            JObject presetJson = PresetManager.Instance.GetPresetJson(presetId);
+        Entity entity = CreateEntityFromJson(json, pos);
 
-            if (presetJson == null)
-            {
-                Debug.LogWarning($"Preset '{presetId}' not found.");
-                return null;
-            }
-
-            // 프리셋과 json 병합 (preset 먼저, json이 우선 적용됨)
-            JObject combinedJson = (JObject)presetJson.DeepClone();
-            foreach (var prop in json)
-                combinedJson[prop.Key] = prop.Value;
-
-            Entity entity = CreateEntityFromJson(combinedJson, pos);
-            entity.gameObject.name = $"{presetId} (Entity)";
-
-            return entity;
-        }
-
-        return null;
+        return entity;
     }
 
     // Default
@@ -94,7 +86,8 @@ public class EntityManager : MonoBehaviour
         if (entities.Contains(entity))
         {
             entities.Remove(entity);
-            Destroy(entity.gameObject);
+            entity.Destroy();
+            // Destroy(entity.gameObject);
         }
     }
 

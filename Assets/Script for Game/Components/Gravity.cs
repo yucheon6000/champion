@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Gravity : MonoBehaviour
+public class Gravity : BTComponent
 {
     private new Rigidbody2D rigidbody2D;
 

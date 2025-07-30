@@ -5,17 +5,14 @@ using UnityEngine;
 
 [NodeParam("target", NodeParamType.EntityVariable)]
 [NodeDescription("Destroys the target entity.")]
-public class DestroyTarget : ActionNode, IUsableNode
+public class DestroyTarget : DestroySomething, IUsableNode
 {
     private BTValue<Entity> target;
 
-    public override NodeState Evaluate()
+    protected override Entity GetEntity()
     {
-        if (target.GetValue(entity.Blackboard) == null) return ReturnFailure();
-
-        Object.Destroy(target.GetValue(entity.Blackboard).gameObject);
-
-        return ReturnSuccess();
+        Debug.Log($"[DestroyTarget] GetEntity: {target.GetValue(entity.Blackboard)}");
+        return target.GetValue(entity.Blackboard);
     }
 
     public override JObject ToJson()

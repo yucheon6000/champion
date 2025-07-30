@@ -28,7 +28,14 @@ public class PresetManager : MonoBehaviour
         {
             string id = kv.Key;
             if (kv.Value is JObject json)
+            {
+                // Set preset
                 presetMap[id] = json;
+
+                // Generate sprite if not exists
+                if (!PromptManager.Instance.HasSprite(id))
+                    PromptManager.Instance.GenerateSprite(id, json["imagePrompt"].ToString());  // hasTransparent is true by default
+            }
         }
     }
 

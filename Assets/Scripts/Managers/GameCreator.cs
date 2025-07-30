@@ -5,6 +5,7 @@ using Newtonsoft.Json.Linq;
 using TMPro;
 using UnityEngine;
 using System.IO;
+using UnityEngine;
 
 public class GameCreator : MonoBehaviour
 {
@@ -51,8 +52,8 @@ public class GameCreator : MonoBehaviour
 
     void Start()
     {
-        StopGame();
         promptManager.Init();
+        StopGame();
         promptManager.OnGetNewPrompt.AddListener(OnGetNewJson);
         promptManager.AddLastJson(lastJson.ToString());
     }
@@ -135,7 +136,11 @@ public class GameCreator : MonoBehaviour
             JArray entitiesJArray = (JArray)sceneJson["entities"];
             foreach (JObject entityJson in entitiesJArray)
             {
-                entityManager.CreateEntityFromJson(entityJson);
+                string presetId = entityJson["presetId"].Value<string>();
+                JArray positionJArray = (JArray)entityJson["position"];
+                Vector2 position = new Vector2(positionJArray[0].Value<float>(), positionJArray[1].Value<float>());
+
+                entityManager.CreateEntityFromPreset(presetId, position);
             }
         }
 

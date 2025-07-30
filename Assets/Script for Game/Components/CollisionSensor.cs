@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class CollisionSensor : MonoBehaviour
+public class CollisionSensor : BTComponent
 {
     public enum CollisionType { Enter, Stay, Exit }
     public struct CollisionInfo
@@ -11,52 +11,46 @@ public class CollisionSensor : MonoBehaviour
         public Vector2 normal;
         public List<string> tags;
         public Entity entity;
-        public Collision2D collision;
         public Vector2? contactPoint;
+        public int frame;
     }
 
-    private List<CollisionInfo> enterCollisions = new List<CollisionInfo>();
+    private List<CollisionInfo> currentCollisions = new List<CollisionInfo>();
     private List<CollisionInfo> exitCollisions = new List<CollisionInfo>();
-    private Dictionary<Entity, CollisionInfo> stayCollisionDict = new Dictionary<Entity, CollisionInfo>();
-    private const float collisionMemoryTime = 0.2f; // seconds
-    private float lastEnterTime = -1f, lastExitTime = -1f;
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        AddCollision(enterCollisions, collision, ref lastEnterTime);
-    }
-    private void OnCollisionStay2D(Collision2D collision)
-    {
-        var entity = collision.collider.GetComponent<Entity>();
-        if (entity == null) return;
-        Vector2? contactPoint = null;
-        Vector2 normal = Vector2.zero;
-        if (collision.contactCount > 0)
-        {
-            contactPoint = collision.GetContact(0).point;
-            normal = collision.GetContact(0).normal;
-        }
-        var info = new CollisionInfo
-        {
-            normal = normal,
-            tags = entity.Tags,
-            entity = entity,
-            collision = collision,
-            contactPoint = contactPoint
-        };
-        stayCollisionDict[entity] = info;
-    }
-    private void OnCollisionExit2D(Collision2D collision)
-    {
-        var entity = collision.collider.GetComponent<Entity>();
-        if (entity != null)
-            stayCollisionDict.Remove(entity);
-        AddCollision(exitCollisions, collision, ref lastExitTime);
+        if (currentCollisions.Any(info => info.entity == collision.collider.GetComponent<Entity>()))
+            return;
+
+        AddCollision(currentCollisions, collision);
+
+        Debug.Log($"OnCollisionEnter2D: {collision.collider.name}");
     }
 
-    private void AddCollision(List<CollisionInfo> list, Collision2D collision, ref float lastTime)
+    void OnCollisionStay2D(Collision2D collision)
+    {
+        if (!currentCollisions.Any(info => info.entity == collision.collider.GetComponent<Entity>()))
+
+            AddCollision(currentCollisions, collision);
+    }
+
+
+    private void OnCollisionExit2D(Collision2D collision)
+    {
+        // currentCollisions에서 제거
+        currentCollisions.RemoveAll(info => info.entity == collision.collider.GetComponent<Entity>());
+
+        AddCollision(exitCollisions, collision);
+
+        Debug.Log($"OnCollisionExit2D: {collision.collider.name}");
+    }
+
+
+    private void AddCollision(List<CollisionInfo> list, Collision2D collision)
     {
         var entity = collision.collider.GetComponent<Entity>();
+
         List<string> tags = entity != null ? entity.Tags : new List<string>();
         Vector2? contactPoint = null;
         Vector2 normal = Vector2.zero;
@@ -70,51 +64,86 @@ public class CollisionSensor : MonoBehaviour
             normal = normal,
             tags = tags,
             entity = entity,
-            collision = collision,
-            contactPoint = contactPoint
+            contactPoint = contactPoint,
+            frame = Time.frameCount
         });
-        lastTime = Time.time;
     }
 
     private void Update()
     {
-        // 오래된 충돌 정보 삭제
-        if (enterCollisions.Count > 0 && Time.time - lastEnterTime > collisionMemoryTime)
-            enterCollisions.Clear();
-        if (exitCollisions.Count > 0 && Time.time - lastExitTime > collisionMemoryTime)
-            exitCollisions.Clear();
-        // stayCollisionDict는 exit에서만 제거
+        // currentCollisions에서 현재 없는 사라진 eneity 제거 (willBeDestroyed) 얘는 exit으로 처리
+        List<CollisionInfo> deletedInfos = new List<CollisionInfo>();
+        foreach (var info in currentCollisions)
+        {
+            if (info.entity.WillBeDestroyed)
+            {
+                var newInfo = info;
+                newInfo.frame = Time.frameCount + 1;
+                exitCollisions.Add(newInfo);
+                deletedInfos.Add(info);
+            }
+        }
+
+        foreach (var info in deletedInfos)
+            currentCollisions.Remove(info);
+
+        exitCollisions.RemoveAll(info => info.frame < Time.frameCount);
     }
 
     public bool TryGetRecentCollision(string direction, string[] targetTags, string collisionType, out Entity entity)
     {
         entity = null;
-        if (collisionType == "stay")
+
+        // 현재와 같은 프레임은 enter,
+        // 현재 다음프레임은 stay
+
+
+        if (collisionType == "enter")
         {
-            foreach (var info in stayCollisionDict.Values)
+            foreach (var info in currentCollisions)
             {
                 if (targetTags.Length > 0 && !info.tags.Any(tag => targetTags.Contains(tag)))
                     continue;
+
+                if (Time.frameCount == info.frame && DirectionMatches(direction, info.normal))
+                {
+                    Debug.Log($"[CollisionSensor] TryGetRecentCollision(enter): {info.entity.name}");
+                    entity = info.entity;
+                    return true;
+                }
+            }
+        }
+
+        else if (collisionType == "stay")
+        {
+            foreach (var info in currentCollisions)
+            {
+                if (targetTags.Length > 0 && !info.tags.Any(tag => targetTags.Contains(tag)))
+                    continue;
+
+                if (Time.frameCount != info.frame && DirectionMatches(direction, info.normal))
+                {
+                    entity = info.entity;
+                    return true;
+                }
+            }
+        }
+
+        else if (collisionType == "exit")
+        {
+            foreach (var info in exitCollisions)
+            {
+                if (targetTags.Length > 0 && !info.tags.Any(tag => targetTags.Contains(tag)))
+                    continue;
+
                 if (DirectionMatches(direction, info.normal))
                 {
                     entity = info.entity;
                     return true;
                 }
             }
-            return false;
         }
-        List<CollisionInfo> list = enterCollisions;
-        if (collisionType == "exit") list = exitCollisions;
-        foreach (var info in list)
-        {
-            if (targetTags.Length > 0 && !info.tags.Any(tag => targetTags.Contains(tag)))
-                continue;
-            if (DirectionMatches(direction, info.normal))
-            {
-                entity = info.entity;
-                return true;
-            }
-        }
+
         return false;
     }
 
@@ -134,16 +163,20 @@ public class CollisionSensor : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        // 가장 최근의 각 타입별 충돌만 시각화
-        if (enterCollisions.Count > 0)
-            DrawCollisionGizmo(enterCollisions[enterCollisions.Count - 1], Color.green);
-        if (stayCollisionDict.Count > 0)
+        // 현재 충돌 시각화 (녹색)
+        foreach (var info in currentCollisions)
         {
-            foreach (var info in stayCollisionDict.Values)
+            if (Time.frameCount == info.frame) // enter
+                DrawCollisionGizmo(info, Color.green);
+            else // stay
                 DrawCollisionGizmo(info, Color.yellow);
         }
-        if (exitCollisions.Count > 0)
-            DrawCollisionGizmo(exitCollisions[exitCollisions.Count - 1], Color.red);
+
+        // exit 충돌 시각화 (빨간색)
+        foreach (var info in exitCollisions)
+        {
+            DrawCollisionGizmo(info, Color.red);
+        }
     }
 
     private void DrawCollisionGizmo(CollisionInfo info, Color color)

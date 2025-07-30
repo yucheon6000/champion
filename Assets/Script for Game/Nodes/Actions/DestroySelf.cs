@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
-[NodeDescription("Destroys the current entity.")]
-public class DestroySelf : ActionNode, IUsableNode
+[NodeDescription("Destroys the current entity (the object with this node).")]
+public class DestroySelf : DestroySomething, IUsableNode
 {
-    public override NodeState Evaluate()
+    protected override Entity GetEntity()
     {
-        Object.Destroy(entity.gameObject);
-        return ReturnSuccess();
+        return entity;
     }
 
     public override JObject ToJson()
@@ -17,10 +16,5 @@ public class DestroySelf : ActionNode, IUsableNode
         JObject json = base.ToJson();
         json.Add("name", GetType().Name);
         return json;
-    }
-
-    public override void FromJson(JObject json)
-    {
-
     }
 }

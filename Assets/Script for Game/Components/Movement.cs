@@ -3,15 +3,16 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
-public class Movement : MonoBehaviour
+public class Movement : BTComponent
 {
     private new Rigidbody2D rigidbody2D;
     private new Collider2D collider2D;
 
     public Vector2 Velocity { get { return rigidbody2D.velocity; } }
 
-    private void Start()
+    protected override void FindComponents()
     {
+        // Destroy the existing box collider and add a circle collider.
         Destroy(GetComponent<Collider2D>());
         gameObject.AddComponent<CircleCollider2D>();
 

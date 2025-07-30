@@ -27,6 +27,9 @@ public class OnHit : ConditionNode, IUsableNode
         {
             if (outputTarget != null)
                 outputTarget.SetValue(entity.Blackboard, collidedEntity);
+
+            Debug.Log($"[OnHit] Evaluate: {collidedEntity.name}");
+
             return ReturnSuccess();
         }
         return ReturnFailure();

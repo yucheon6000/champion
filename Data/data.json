@@ -1,6 +1,7 @@
 {
   "globalVariables": {
-    "g_i_score": 0
+    "g_i_score": 0,
+    "g_i_totalCoins": 8
   },
   "controllers": [
     {
@@ -16,41 +17,53 @@
   "presets": {
     "player": {
       "tags": [
-        "Player"
+        "Player",
+        "CameraTarget",
+        "Gravity"
       ],
-      "color": "#FF0000",
+      "imagePrompt": "A cheerful, round, bouncy blue slime character with big friendly eyes, cartoon style",
+      "color": "#4A90E2",
       "variables": {
         "f_moveSpeed": 6.0,
         "f_jumpForce": 14.0,
+        "f_stompJumpForce": 9.0,
+        "f_superJumpForce": 22.0,
         "e_hitTarget": null
       },
       "behaviorTree": {
         "type": "composite",
         "name": "Selector",
-        "//": "Main player logic. Order of execution: Win > Lose > Interact > Move.",
+        "//": "플레이어의 모든 행동을 결정하는 최상위 노드. 위에서부터 순서대로 실행됩니다.",
         "children": [
           {
             "type": "composite",
             "name": "Sequence",
-            "//": "Win condition: Touch the Goal",
+            "//": "1. 몬스터 밟기 (가장 높은 충돌 우선순위)",
             "children": [
               {
                 "type": "condition",
-                "name": "OnHit",
+                "name": "OnStomp",
                 "tags": [
-                  "Goal"
-                ]
+                  "Enemy"
+                ],
+                "outputTarget": "{e_hitTarget}"
               },
               {
                 "type": "action",
-                "name": "Win"
+                "name": "DestroyTarget",
+                "target": "{e_hitTarget}"
+              },
+              {
+                "type": "action",
+                "name": "Jump",
+                "jumpForce": "{f_stompJumpForce}"
               }
             ]
           },
           {
             "type": "composite",
             "name": "Sequence",
-            "//": "Lose condition: Hit an enemy from the side/below",
+            "//": "2. 몬스터와 부딪혀 패배",
             "children": [
               {
                 "type": "condition",
@@ -68,404 +81,428 @@
           {
             "type": "composite",
             "name": "Sequence",
-            "//": "Interaction: Stomp an enemy",
+            "//": "3. 가시 함정에 닿아 패배",
+            "children": [
+              {
+                "type": "condition",
+                "name": "OnHit",
+                "tags": [
+                  "Spike"
+                ]
+              },
+              {
+                "type": "action",
+                "name": "Lose"
+              }
+            ]
+          },
+          {
+            "type": "composite",
+            "name": "Sequence",
+            "//": "4. 킬존에 닿아 패배",
+            "children": [
+              {
+                "type": "condition",
+                "name": "OnHit",
+                "tags": [
+                  "KillZone"
+                ]
+              },
+              {
+                "type": "action",
+                "name": "Lose"
+              }
+            ]
+          },
+          {
+            "type": "composite",
+            "name": "Sequence",
+            "//": "5. 코인 획득",
+            "children": [
+              {
+                "type": "condition",
+                "name": "OnHit",
+                "tags": [
+                  "Coin"
+                ],
+                "outputTarget": "{e_hitTarget}"
+              },
+              {
+                "type": "action",
+                "name": "IncreaseVariable",
+                "variable": "{g_i_score}",
+                "amount": 1
+              },
+              {
+                "type": "action",
+                "name": "DestroyTarget",
+                "target": "{e_hitTarget}"
+              }
+            ]
+          },
+          {
+            "type": "composite",
+            "name": "Sequence",
+            "//": "6. 점프 패드 사용",
             "children": [
               {
                 "type": "condition",
                 "name": "OnStomp",
                 "tags": [
-                  "Enemy"
-                ],
-                "outputTarget": "{e_hitTarget}"
-              },
-              {
-                "type": "action",
-                "name": "DestroyTarget",
-                "target": "{e_hitTarget}"
-              },
-              {
-                "type": "action",
-                "name": "IncreaseVariable",
-                "variable": "{g_i_score}",
-                "amount": 10
-              }
-            ]
-          },
-          {
-            "type": "composite",
-            "name": "Sequence",
-            "//": "Interaction: Hit a question block from below",
-            "children": [
-              {
-                "type": "condition",
-                "name": "OnHeadHit",
-                "tags": [
-                  "QuestionBlock"
-                ],
-                "outputTarget": "{e_hitTarget}"
-              },
-              {
-                "type": "action",
-                "name": "IncreaseVariable",
-                "variable": "{g_i_score}",
-                "amount": 10
-              },
-              {
-                "type": "action",
-                "name": "DestroyTarget",
-                "target": "{e_hitTarget}"
-              }
-            ]
-          },
-          {
-            "type": "composite",
-            "name": "Sequence",
-            "//": "Interaction: Break a brick block from below",
-            "children": [
-              {
-                "type": "condition",
-                "name": "OnHeadHit",
-                "tags": [
-                  "BrickBlock"
-                ],
-                "outputTarget": "{e_hitTarget}"
-              },
-              {
-                "type": "action",
-                "name": "DestroyTarget",
-                "target": "{e_hitTarget}"
-              }
-            ]
-          },
-          {
-            "type": "composite",
-            "name": "Selector",
-            "//": "Handle movement and jumping",
-            "children": [
-              {
-                "type": "composite",
-                "name": "Sequence",
-                "//": "Jumping logic",
-                "children": [
-                  {
-                    "type": "condition",
-                    "name": "IsButtonDown",
-                    "buttonId": "Jump"
-                  },
-                  {
-                    "type": "condition",
-                    "name": "IsOnGround"
-                  },
-                  {
-                    "type": "action",
-                    "name": "Jump",
-                    "jumpForce": "{f_jumpForce}"
-                  }
+                  "JumpPad"
                 ]
               },
               {
                 "type": "action",
-                "name": "MoveByController",
-                "//": "Horizontal movement",
-                "controllerId": "Movement",
-                "moveSpeed": "{f_moveSpeed}"
+                "name": "Jump",
+                "jumpForce": "{f_superJumpForce}"
               }
             ]
+          },
+          {
+            "type": "composite",
+            "name": "Sequence",
+            "//": "7. 목표 지점 도달 시 승리 조건 확인",
+            "children": [
+              {
+                "type": "condition",
+                "name": "OnHit",
+                "tags": [
+                  "Goal"
+                ]
+              },
+              {
+                "type": "condition",
+                "name": "CompareNumberVariable",
+                "//": "현재 점수(모은 코인 수)가 총 코인 수와 같은지 확인합니다.",
+                "variable": "{g_i_score}",
+                "operator": "is_equal_to",
+                "value": "{g_i_totalCoins}"
+              },
+              {
+                "type": "action",
+                "name": "Win",
+                "//": "조건을 만족하면 게임에서 승리합니다."
+              }
+            ]
+          },
+          {
+            "type": "composite",
+            "name": "Sequence",
+            "//": "8. 일반 점프 로직",
+            "children": [
+              {
+                "type": "condition",
+                "name": "IsOnGround"
+              },
+              {
+                "type": "condition",
+                "name": "IsButtonDown",
+                "buttonId": "Jump"
+              },
+              {
+                "type": "action",
+                "name": "Jump",
+                "jumpForce": "{f_jumpForce}"
+              }
+            ]
+          },
+          {
+            "type": "action",
+            "name": "MoveByController",
+            "//": "9. 이동 로직 (다른 행동이 없을 때 항상 실행됨)",
+            "controllerId": "Movement",
+            "moveSpeed": "{f_moveSpeed}"
           }
         ]
       }
     },
-    "goomba": {
+    "monster": {
       "tags": [
         "Enemy",
-        "Ground"
+        "Gravity"
       ],
-      "color": "#8B4513",
-      "variables": {},
-      "behaviorTree": {
-        "//": "Goombas are currently stationary as there is no autonomous Move action node."
-      }
-    },
-    "ground": {
-      "tags": [
-        "Ground"
-      ],
-      "color": "#D2691E",
+      "imagePrompt": "A grumpy-looking, stationary, red-brown mushroom monster with short legs and a spiky cap, cartoon style",
+      "color": "#D0021B",
       "variables": {},
       "behaviorTree": {}
     },
-    "brick_block": {
+    "platform": {
       "tags": [
         "Ground",
-        "BrickBlock"
+        "Fixed"
       ],
-      "color": "#B22222",
+      "imagePrompt": "A floating island platform covered in lush green grass with brown dirt visible underneath, cartoon style",
+      "color": "#7ED321",
       "variables": {},
       "behaviorTree": {}
     },
-    "question_block": {
+    "coin": {
       "tags": [
+        "Coin"
+      ],
+      "imagePrompt": "A shiny, spinning gold coin with a star embossed in the center, cartoon style",
+      "color": "#F8E71C",
+      "variables": {},
+      "behaviorTree": {}
+    },
+    "spike": {
+      "tags": [
+        "Spike",
+        "Fixed"
+      ],
+      "imagePrompt": "A sharp, menacing metal spike trap pointing upwards, cartoon style",
+      "color": "#555555",
+      "variables": {},
+      "behaviorTree": {}
+    },
+    "jump_pad": {
+      "tags": [
+        "JumpPad",
         "Ground",
-        "QuestionBlock"
+        "Fixed"
       ],
-      "color": "#FFD700",
+      "imagePrompt": "A bouncy-looking purple spring platform with a coiled spring visible, cartoon style",
+      "color": "#9013FE",
       "variables": {},
       "behaviorTree": {}
     },
-    "pipe": {
+    "goal_flag": {
       "tags": [
-        "Ground"
+        "Goal",
+        "Fixed"
       ],
-      "color": "#008000",
+      "imagePrompt": "A checkered black and white finish line flag on a tall metal pole, cartoon style",
+      "color": "#FFFFFF",
       "variables": {},
       "behaviorTree": {}
     },
-    "goal": {
+    "kill_zone": {
       "tags": [
-        "Goal"
+        "KillZone"
       ],
-      "color": "#E0E0E0",
+      "imagePrompt": "An invisible trigger zone, should not be rendered",
+      "color": "#FF0000",
       "variables": {},
       "behaviorTree": {}
     }
   },
   "scenes": [
     {
-      "id": "World_1-1",
+      "id": "Level_1",
       "entities": [
         {
           "presetId": "player",
           "position": [
-            -10,
-            1
+            -15,
+            -3
           ]
         },
         {
-          "presetId": "ground",
+          "presetId": "platform",
           "position": [
-            -11,
-            0
-          ]
+            -15,
+            -5
+          ],
+          "comment": "Start platform"
         },
         {
-          "presetId": "ground",
-          "position": [
-            -10,
-            0
-          ]
-        },
-        {
-          "presetId": "ground",
-          "position": [
-            -9,
-            0
-          ]
-        },
-        {
-          "presetId": "ground",
+          "presetId": "platform",
           "position": [
             -8,
-            0
+            -4
           ]
         },
         {
-          "presetId": "ground",
+          "presetId": "coin",
           "position": [
-            -4,
-            0
+            -8,
+            -3
           ]
         },
         {
-          "presetId": "question_block",
-          "position": [
-            -3,
-            3
-          ]
-        },
-        {
-          "presetId": "brick_block",
-          "position": [
-            -2,
-            3
-          ]
-        },
-        {
-          "presetId": "question_block",
-          "position": [
-            -1,
-            3
-          ]
-        },
-        {
-          "presetId": "brick_block",
+          "presetId": "platform",
           "position": [
             0,
-            3
+            -2
           ]
         },
         {
-          "presetId": "goomba",
-          "position": [
-            -1,
-            1
-          ]
-        },
-        {
-          "presetId": "ground",
-          "position": [
-            -2,
-            0
-          ]
-        },
-        {
-          "presetId": "ground",
-          "position": [
-            -1,
-            0
-          ]
-        },
-        {
-          "presetId": "ground",
+          "presetId": "monster",
           "position": [
             0,
-            0
+            -1
           ]
         },
         {
-          "presetId": "ground",
-          "position": [
-            1,
-            0
-          ]
-        },
-        {
-          "presetId": "pipe",
+          "presetId": "coin",
           "position": [
             3,
-            1
+            3
           ]
         },
         {
-          "presetId": "pipe",
+          "presetId": "platform",
           "position": [
             3,
             2
-          ]
+          ],
+          "comment": "Requires a good jump"
         },
         {
-          "presetId": "pipe",
-          "position": [
-            5,
-            1
-          ]
-        },
-        {
-          "presetId": "pipe",
-          "position": [
-            5,
-            2
-          ]
-        },
-        {
-          "presetId": "pipe",
-          "position": [
-            5,
-            3
-          ]
-        },
-        {
-          "presetId": "goomba",
-          "position": [
-            8,
-            1
-          ]
-        },
-        {
-          "presetId": "goomba",
+          "presetId": "platform",
           "position": [
             9,
             1
           ]
         },
         {
-          "presetId": "ground",
-          "position": [
-            8,
-            0
-          ]
-        },
-        {
-          "presetId": "ground",
+          "presetId": "jump_pad",
           "position": [
             9,
-            0
+            2
+          ],
+          "comment": "To upper path"
+        },
+        {
+          "presetId": "platform",
+          "position": [
+            9,
+            10
+          ],
+          "comment": "Upper path high platform"
+        },
+        {
+          "presetId": "coin",
+          "position": [
+            8,
+            11
           ]
         },
         {
-          "presetId": "ground",
+          "presetId": "coin",
           "position": [
             10,
+            11
+          ]
+        },
+        {
+          "presetId": "platform",
+          "position": [
+            16,
             0
           ]
         },
         {
-          "presetId": "ground",
+          "presetId": "spike",
           "position": [
-            11,
-            0
-          ]
-        },
-        {
-          "presetId": "ground",
-          "position": [
-            12,
-            0
-          ]
-        },
-        {
-          "presetId": "ground",
-          "position": [
-            13,
-            0
-          ]
-        },
-        {
-          "presetId": "ground",
-          "position": [
-            14,
+            16,
             1
           ]
         },
         {
-          "presetId": "ground",
+          "presetId": "platform",
           "position": [
-            15,
+            22,
+            -1
+          ],
+          "comment": "Lower path"
+        },
+        {
+          "presetId": "coin",
+          "position": [
+            22,
+            0
+          ]
+        },
+        {
+          "presetId": "monster",
+          "position": [
+            25,
+            0
+          ]
+        },
+        {
+          "presetId": "platform",
+          "position": [
+            25,
+            -1
+          ]
+        },
+        {
+          "presetId": "coin",
+          "position": [
+            25,
+            5
+          ],
+          "comment": "Tricky coin above monster"
+        },
+        {
+          "presetId": "platform",
+          "position": [
+            30,
             2
           ]
         },
         {
-          "presetId": "ground",
+          "presetId": "spike",
           "position": [
-            16,
+            32,
             3
           ]
         },
         {
-          "presetId": "ground",
+          "presetId": "spike",
           "position": [
-            17,
+            33,
             3
           ]
         },
         {
-          "presetId": "goal",
+          "presetId": "platform",
           "position": [
-            17,
+            35,
+            2
+          ],
+          "comment": "Jump over spikes"
+        },
+        {
+          "presetId": "coin",
+          "position": [
+            35,
+            3
+          ]
+        },
+        {
+          "presetId": "platform",
+          "position": [
+            40,
             4
+          ]
+        },
+        {
+          "presetId": "coin",
+          "position": [
+            40,
+            5
+          ]
+        },
+        {
+          "presetId": "goal_flag",
+          "position": [
+            40,
+            5.5
+          ]
+        },
+        {
+          "presetId": "kill_zone",
+          "position": [
+            0,
+            -12
           ]
         }
       ]
     }
   ],
-  "assistant": "안녕하세요! 요청하신 대로 클래식 마리오 스타일의 게임을 생성했습니다. 플레이어는 이동, 점프, 그리고 적을 밟아 처치할 수 있습니다. 물음표 블록이나 벽돌 블록을 아래에서 치면 점수를 얻거나 파괴할 수 있습니다. 현재 시스템의 제약으로 인해 적(굼바)은 좌우로 움직이지 않고 제자리에 서 있습니다. 레벨 끝에 있는 깃발에 도달하면 승리합니다. 즐겁게 플레이하세요!"
+  "assistant": "새로운 규칙이 추가된 '통통 슬라임의 점프 모험!' v2.0입니다! 이제 맵에 있는 **모든 코인(총 8개)을 모아야만** 마지막 깃발에 도달했을 때 승리할 수 있습니다. 또한, 길 곳곳에 닿으면 즉시 패배하는 무시무시한 **가시 함정**이 추가되었습니다. 더욱 세심한 컨트롤로 모든 코인을 모으고, 함정을 피해 슬라임의 모험을 완수하세요!"
 }

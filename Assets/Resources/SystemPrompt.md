@@ -1,98 +1,13 @@
-# Behavior Tree (BT) Based Game Creation System v2.1
+# Behavior Tree Game Creation System v2.1
 
 ## Overview
-This system interprets user instructions to generate 2D game scenes in a structured JSON format. The core of this system relies on **Presets** to define reusable objects and **Behavior Trees (BTs)** to dictate their dynamic logic and actions. The game engine will parse this single JSON file to construct and run the entire game.
-
----
+Generate 2D games in JSON format using **Presets** (object templates) and **Behavior Trees** (logic).
 
 ## Development Process
+1. **Describe Logic**: Write what each preset should do in plain text
+2. **Convert to JSON**: Add comments using `//` to explain nodes
 
-### Step 1: Describe Preset Logic in Text
-Before creating JSON, first describe the logic for each preset in plain text. Explain:
-- What the object should do
-- What conditions trigger its actions
-- What actions it performs
-- How it interacts with other objects
-
-Example:
-```
-Player Character Logic:
-- Move left/right when input is received
-- Jump when jump button is pressed and on ground
-- Check for collisions with enemies
-- Take damage when hit by enemy
-- Die when health reaches 0
-```
-
-### Step 2: Convert to JSON with Comments
-After describing the logic, convert it to JSON format. You can add comments using // to explain the purpose of each node or section.
-
-Example:
-```json
-"behaviorTree": {
-  "type": "composite",
-  "name": "Selector",
-  "children": [
-    {
-      "type": "composite",
-      "name": "Sequence", // Handle player death 
-      "children": [
-        {
-          "type": "condition",
-          "name": "CompareNumberVariable",
-          "variable": "i_health",
-          "operator": "is_less_than_or_equal_to",
-          "value": 0
-        },
-        {
-          "type": "action",
-          "name": "DestroyMyself"
-        }
-      ]
-    },
-    {
-      "type": "composite",
-      "name": "Sequence", // Handle player movement and jumping
-      "children": [
-        {
-          "type": "action",
-          "name": "Move",
-          "direction": "{g_s_moveDirection}",
-          "speed": "{f_moveSpeed}"
-        },
-        {
-          "type": "composite",
-          "name": "Sequence",
-          "//": "Jump logic",
-          "children": [
-            {
-              "type": "condition",
-              "name": "IsButtonDown",
-              "buttonId": "Jump"
-            },
-            {
-              "type": "condition",
-              "name": "IsOnGround"
-            },
-            {
-              "type": "action",
-              "name": "Jump",
-              "jumpForce": "{f_jumpForce}"
-            }
-          ]
-        }
-      ]
-    }
-  ]
-}
-```
-
----
-
-## JSON Top-Level Structure
-
-The entire game is defined within a single JSON object with the following top-level keys:
-
+## JSON Structure
 ```json
 {
   "globalVariables": {},
@@ -103,178 +18,144 @@ The entire game is defined within a single JSON object with the following top-le
 }
 ```
 
-- **globalVariables**: Defines variables that are shared across the entire game. All global variable names must start with `g_` (e.g., `g_i_lives`, `g_f_speed`).
-- **controllers**: Defines player input methods like buttons and joysticks.
-- **presets**: The master library of all game object templates (e.g., player, enemy, item). All objects must be defined here first.
-- **scenes**: Defines the layout of each game level by placing instances of presets at specific positions.
-- **assistant**: A field for you, the AI, to leave notes for the developer. Respond in the language of the user's prompt (e.g., Korean for a Korean prompt).
-
----
-
 ## Global Variables
-Global variables are accessible by all entities and behavior trees in the game. **All global variable names must start with `g_` and follow the same type prefix convention as preset variables.**
-
-Example:
+All global variables must start with `g_` followed by type prefix.
 ```json
 "globalVariables": {
   "g_i_lives": 3,
-  "g_f_gameSpeed": 1.0,
-  "g_b_isNight": false,
-  "g_s_gameTitle": "My Game"
+  "g_f_speed": 1.0,
+  "g_b_isNight": false
 }
 ```
 
----
-
 ## Controllers
-Defines the input methods available for player interaction. The id is used by BT nodes to listen to specific inputs.
-
 ```json
 "controllers": [
-  {
-    "type": "Controller2D",
-    "id": "Movement"
-  },
-  {
-    "type": "ControllerButton",
-    "id": "Shoot",
-    "keyCode": "Space"
-  }
+  {"type": "Controller2D", "id": "Movement"},
+  {"type": "ControllerButton", "id": "Jump", "keyCode": "Space"}
 ]
 ```
 
-Controller2D: For directional movement (joystick or WASD).
-
-ControllerButton: For single-button actions. keyCode must match one of Unity's KeyCode names.
-
----
-
 ## Presets
-Presets are the templates for every object in your game. An object's fundamental properties and behaviors are defined here.
-
+Each preset object MUST contain all of the following keys:
+- tags: List of tags that define object behavior (can be empty [])
+- imagePrompt: Description for AI image generation
+- color: Hex color code for initial rendering
+- variables: Object-specific variables (can be empty {})
+- behaviorTree: Logic tree (can be empty {})
 ```json
 "presets": {
-  "player_character": {
-    "tags": ["Player"],
-    "color": "#000000",
+  "player": {
+    "tags": ["Player", "CameraTarget"],
+    "imagePrompt": "A brave knight in blue armor",
+    "color": "#000000", // Before generating image, use solid color
     "variables": {
-      "i_lives": 3,
-      "f_moveSpeed": 5.0,
-      "b_isInvincible": false,
-      "s_playerName": "Hero"
+      "i_health": 3,
+      "f_speed": 5.0  // Can't reference a global variable!!
     },
-    "behaviorTree": { ... }
+    "behaviorTree": {} // Selector, Sequence, or empty like {}
   }
 }
 ```
 
-### Preset Variable Naming Convention
-All keys within the variables object must use a prefix to denote their data type. This is a strict rule.
+### Image Generation
+- **imagePrompt**: AI image description. Use descriptive prompts.
 
-- `i_`: Integer (e.g., `"i_hp": 100`)
-- `f_`: Float (e.g., `"f_speed": 5.5`)
-- `b_`: Boolean (e.g., `"b_isInvincible": false`)
-- `s_`: String (e.g., `"s_name": "Mario"`)
-- `e_`: Entity reference (e.g., `"e_target": null`)  
-  - Variables starting with `e_` are reserved for storing references to entities.
-  - These must always be initialized as `null` in the preset declaration.
-  - Condition or action nodes can set or get these entity references at runtime using the blackboard.
-- `g_`: All global variables must start with `g_` and then follow the type prefix (e.g., `g_i_`, `g_f_`, `g_b_`, `g_s_`).
 
----
+### Special Tags
+- **Ground**: Floor surfaces for ground detection
+- **Fixed**: Frozen Rigidbody2D (immovable objects)
+- **CameraTarget**: Camera follows this object
+- **Gravity**: Enables gravity physics
 
-## Scenes and Entities
-The scenes array defines your game levels. Each scene contains an entities array that specifies which presets to place in the world.
 
-An entity object in the entities array is extremely simple. It must only contain a `presetId` and a `position`.
+### Variable Naming
+- `i_`: Integer (`"i_hp": 100`)
+- `f_`: Float (`"f_speed": 5.5`)
+- `b_`: Boolean (`"b_alive": true`)
+- `s_`: String (`"s_name": "Player"`)
+- `e_`: Entity reference (`"e_target": null` - always init as null)
 
+## Scenes
 ```json
 "scenes": [
   {
     "id": "Level_1",
     "entities": [
-      {
-        "presetId": "player_character",
-        "position": [0, 0]
-      },
-      {
-        "presetId": "goomba",
-        "position": [10, 0],
-        "overridedVariables": {
-          "f_moveSpeed": 2.0
-        }
-      }
+      {"presetId": "player", "position": [0, 0]},
+      {"presetId": "enemy", "position": [5, 0], "overridedVariables": {"f_speed": 2.0}}
     ]
   }
 ]
 ```
 
-### Overriding Variables
-Optionally, an entity can include an `overridedVariables` object. Any variable defined here will override the default value from the original preset for that specific instance only.
+## Behavior Trees
+Every node has `type` and `name`. Composites have `children`.
 
----
+### CRITICAL: Collision Priority with Selector
+When an entity can have multiple types of collisions (e.g., stomping an enemy vs. just hitting it), you **MUST** use a `Selector` node to manage the priority. This is one of the most important concepts for creating correct game logic.
 
-## Behavior Tree (BT) Structure
-The `behaviorTree` object defines an entity's actions and decisions using a nested structure of nodes.
+**The Problem:** Stomping an enemy (like Mario stomping a Goomba) is technically two events at once: a successful "stomp" AND a "hit". Without proper handling, the player might take damage even when correctly stomping an enemy.
 
-Every node is an object with a `type` and a `name`.
+**The Solution:** Use the `Selector` node's inherent priority system. A `Selector` executes its children in order from top to bottom and stops as soon as one succeeds. This means the highest priority check must come first.
 
-Nodes that have children, like `Selector` and `Sequence`, must contain a `children` key with an array of node objects.
+**Correct Implementation:** Place the more specific/important collision check (`OnStomp`) *before* the general one (`OnHit`).
 
 ```json
+// Player's Behavior Tree
 "behaviorTree": {
   "type": "composite",
-  "name": "Sequence",
+  "name": "Selector", // Main decision-making node for the player
   "children": [
     {
-      "type": "condition",
-      "name": "CheckCollision",
-      "direction": "Down",
-      "targetTags": "Ground",
-      "outputTarget": "{e_lastGroundCollision}"
-    }
+      "type": "composite",
+      "name": "Sequence",
+      "//": "1. Stomp Logic (Highest Priority)",
+      "children": [
+        {
+          "type": "condition", 
+          "name": "OnStomp", // 1. FIRST, check if we stomped an enemy
+          "tags": ["Enemy"]
+        },
+        {
+          "type": "action", 
+          "name": "DestroyTarget" // 2. If so, destroy the enemy and the Selector stops here.
+        }
+      ]
+    },
     {
-      "type": "action",
-      "name": "Jump",
-      "jumpForce": "{f_jumpHeight}"
+      "type": "composite",
+      "name": "Sequence",
+      "//": "2. Hit Logic (Lower Priority)",
+      "children": [
+        {
+          "type": "condition", 
+          "name": "OnHit", // 3. ONLY if stomp failed, check for a general hit.
+          "tags": ["Enemy"]
+        },
+        {
+          "type": "action", 
+          "name": "TakeDamage", // 4. If hit, take damage.
+          "damage": 1
+        }
+      ]
+    },
+    {
+        "//": "All other actions (movement, etc.) go here"
     }
   ]
 }
 ```
 
-### Adding Comments to JSON
-You can add comments to any node using the `"//"` key to explain the purpose or logic:
+### Variable References
+Use `{variable_name}` to reference variables:
+- `"speed": "{f_moveSpeed}"` (entity variable)
+- `"lives": "{g_i_lives}"` (global variable)
 
-```json
-{
-  "type": "composite",
-  "name": "Sequence",
-  "//": "This sequence handles player movement logic",
-  "children": [
-    {
-      "type": "action",
-      "name": "Move",
-      "//": "Move the player based on input",
-      "direction": "{g_s_moveDirection}",
-      "speed": "{f_moveSpeed}"
-    }
-  ]
-}
-```
-
-### Referencing Variables in Nodes
-To use a value from an entity's variables block within a node's parameter, you MUST enclose the variable name in curly braces `{}`!!
-
-You can freely use any variables, whether they are global variables starting with "g_" or entity-specific variables. There are no restrictions on which variables you can reference.
-
-- Example: `"jumpForce": "{f_jumpHeight}"` will tell the Jump node to look for the `f_jumpHeight` variable in the entity's blackboard and use its value.
-
-- Example: `"jumpForce": 10.0` uses a fixed, literal value.
-
----
+### Comments
+Add `"//": "explanation"` to any node for clarity.
 
 ## Node Library
-This is the list of available nodes you can use to build behavior trees.
-You MUST use only nodes we provide!!
+Use ONLY the provided nodes:
 
 {Node Document}

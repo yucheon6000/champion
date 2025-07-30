@@ -73,28 +73,25 @@ public class CompareNumberVariable : ConditionNode, IUsableNode
 
     public override void FromJson(JObject json)
     {
-        // Variable
+        // Variable and Value to Compare
         JToken variableJToken = json["variable"];
+        JToken valueToCompareJToken = json["value"];
+
         if (variableJToken.ToObject<string>().Contains("i_"))
         {
             variable_int = BTValue<int>.FromJToken(variableJToken);
+            valueToCompare_int = BTValue<int>.FromJToken(valueToCompareJToken);
             numberType = NumberType.Int;
         }
         else if (variableJToken.ToObject<string>().Contains("f_"))
         {
             variable_float = BTValue<float>.FromJToken(variableJToken);
+            valueToCompare_float = BTValue<float>.FromJToken(valueToCompareJToken);
             numberType = NumberType.Float;
         }
 
         // Operator
         operatorString = json["operator"].ToObject<string>();
-
-        // Value to Compare
-        JToken valueToCompareJToken = json["value"];
-        if (numberType == NumberType.Int)
-            valueToCompare_int = BTValue<int>.FromJToken(valueToCompareJToken);
-        else if (numberType == NumberType.Float)
-            valueToCompare_float = BTValue<float>.FromJToken(valueToCompareJToken);
 
         // Output Target
         if (json.ContainsKey("resultTarget"))

@@ -1,0 +1,464 @@
+{
+  "globalVariables": {
+    "g_i_starCount": 5
+  },
+  "controllers": [
+    {
+      "type": "Controller2D",
+      "id": "Movement"
+    },
+    {
+      "type": "ControllerButton",
+      "id": "Jump",
+      "keyCode": "Space"
+    }
+  ],
+  "presets": {
+    "player_jelly": {
+      "tags": [
+        "Player",
+        "CameraTarget"
+      ],
+      "imagePrompt": "A cute, determined, pink, round jelly character with big eyes, ready for a challenge",
+      "hasTransparent": true,
+      "variables": {
+        "f_moveSpeed": 5.0,
+        "f_jumpForce": 15.0,
+        "f_superJumpForce": 25.0,
+        "e_stompedEnemy": null
+      },
+      "behaviorTree": {
+        "type": "composite",
+        "name": "Selector",
+        "children": [
+          {
+            "type": "composite",
+            "name": "Sequence",
+            "//": "승리 조건: 별을 모두 모았는지 확인",
+            "children": [
+              {
+                "type": "condition",
+                "name": "CompareNumberVariable",
+                "variable": "{g_i_starCount}",
+                "operator": "is_less_than_or_equal_to",
+                "value": 0
+              },
+              {
+                "type": "action",
+                "name": "Win"
+              }
+            ]
+          },
+          {
+            "type": "composite",
+            "name": "Selector",
+            "//": "피격 판정 우선순위 관리: Selector를 사용해 밟기(OnStomp)를 일반 피격(OnHit)보다 먼저 처리합니다.",
+            "children": [
+              {
+                "type": "composite",
+                "name": "Sequence",
+                "//": "우선순위 1: 튕겨내는 버섯 밟기",
+                "children": [
+                  {
+                    "type": "condition",
+                    "name": "OnStomp",
+                    "tags": [
+                      "Bouncy"
+                    ]
+                  },
+                  {
+                    "type": "action",
+                    "name": "Jump",
+                    "jumpForce": "{f_superJumpForce}"
+                  }
+                ]
+              },
+              {
+                "type": "composite",
+                "name": "Sequence",
+                "//": "우선순위 2: 적 밟아 없애기",
+                "children": [
+                  {
+                    "type": "condition",
+                    "name": "OnStomp",
+                    "tags": [
+                      "Enemy"
+                    ],
+                    "outputTarget": "{e_stompedEnemy}"
+                  },
+                  {
+                    "type": "action",
+                    "name": "DestroyTarget",
+                    "target": "{e_stompedEnemy}"
+                  }
+                ]
+              },
+              {
+                "type": "composite",
+                "name": "Sequence",
+                "//": "우선순위 3: 일반 피격 (적 또는 함정)",
+                "children": [
+                  {
+                    "type": "condition",
+                    "name": "OnHit",
+                    "tags": [
+                      "Enemy",
+                      "Trap"
+                    ]
+                  },
+                  {
+                    "type": "action",
+                    "name": "Lose"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "composite",
+            "name": "Sequence",
+            "//": "플레이어 기본 이동 및 점프 로직",
+            "children": [
+              {
+                "type": "action",
+                "name": "MoveByController",
+                "controllerId": "Movement",
+                "moveSpeed": "{f_moveSpeed}"
+              },
+              {
+                "type": "composite",
+                "name": "Sequence",
+                "//": "일반 점프 로직",
+                "children": [
+                  {
+                    "type": "condition",
+                    "name": "IsButtonDown",
+                    "buttonId": "Jump"
+                  },
+                  {
+                    "type": "condition",
+                    "name": "IsOnGround"
+                  },
+                  {
+                    "type": "action",
+                    "name": "Jump",
+                    "jumpForce": "{f_jumpForce}"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "enemy_cloud": {
+      "tags": [
+        "Enemy"
+      ],
+      "imagePrompt": "A small, grumpy, grey cartoon cloud with an angry face",
+      "hasTransparent": true,
+      "variables": {
+        "f_jumpForce": 10.0,
+        "f_jumpInterval": 2.0
+      },
+      "behaviorTree": {
+        "type": "composite",
+        "name": "Sequence",
+        "children": [
+          {
+            "type": "condition",
+            "name": "IsOnGround"
+          },
+          {
+            "type": "action",
+            "name": "WaitSeconds",
+            "seconds": "{f_jumpInterval}"
+          },
+          {
+            "type": "action",
+            "name": "Jump",
+            "jumpForce": "{f_jumpForce}"
+          }
+        ]
+      }
+    },
+    "trap_spikyball": {
+      "tags": [
+        "Trap",
+        "Fixed"
+      ],
+      "imagePrompt": "A menacing, black spiky ball with red glowing eyes, sitting still",
+      "hasTransparent": true,
+      "variables": {},
+      "behaviorTree": null
+    },
+    "item_star": {
+      "tags": [
+        "Star",
+        "Fixed"
+      ],
+      "imagePrompt": "A shiny, golden, sparkling cartoon star with a happy face",
+      "hasTransparent": true,
+      "variables": {},
+      "behaviorTree": {
+        "type": "composite",
+        "name": "Sequence",
+        "children": [
+          {
+            "type": "condition",
+            "name": "OnHit",
+            "tags": [
+              "Player"
+            ]
+          },
+          {
+            "type": "action",
+            "name": "IncreaseVariable",
+            "variable": "{g_i_starCount}",
+            "amount": -1
+          },
+          {
+            "type": "action",
+            "name": "DestroySelf"
+          }
+        ]
+      }
+    },
+    "platform_stone": {
+      "tags": [
+        "Ground",
+        "Fixed"
+      ],
+      "imagePrompt": "A cheerful platform block made of bright, happy, colorful toy bricks, like a Lego block",
+      "hasTransparent": false,
+      "variables": {},
+      "behaviorTree": null
+    },
+    "platform_disappearing": {
+      "tags": [
+        "Ground"
+      ],
+      "imagePrompt": "A cracked, unstable-looking platform made of light brown rock that looks like it's about to crumble",
+      "hasTransparent": true,
+      "variables": {
+        "f_disappearDelay": 0.5
+      },
+      "behaviorTree": {
+        "type": "composite",
+        "name": "Sequence",
+        "//": "플레이어가 밟으면 잠시 후 사라짐",
+        "children": [
+          {
+            "type": "condition",
+            "name": "OnStomp",
+            "tags": [
+              "Player"
+            ]
+          },
+          {
+            "type": "action",
+            "name": "WaitSeconds",
+            "seconds": "{f_disappearDelay}"
+          },
+          {
+            "type": "action",
+            "name": "DestroySelf"
+          }
+        ]
+      }
+    },
+    "object_bouncyshroom": {
+      "tags": [
+        "Bouncy",
+        "Fixed"
+      ],
+      "imagePrompt": "A large, springy, vibrant purple mushroom with a bouncy-looking cap",
+      "hasTransparent": true,
+      "variables": {},
+      "behaviorTree": null
+    }
+  },
+  "scenes": [
+    {
+      "id": "Level_Hard",
+      "entities": [
+        {
+          "presetId": "player_jelly",
+          "position": [
+            -12,
+            -3
+          ]
+        },
+        {
+          "presetId": "platform_stone",
+          "position": [
+            -13,
+            -4
+          ]
+        },
+        {
+          "presetId": "platform_stone",
+          "position": [
+            -12,
+            -4
+          ]
+        },
+        {
+          "presetId": "platform_stone",
+          "position": [
+            -11,
+            -4
+          ]
+        },
+        {
+          "presetId": "platform_disappearing",
+          "position": [
+            -7,
+            -3
+          ]
+        },
+        {
+          "presetId": "platform_disappearing",
+          "position": [
+            -4,
+            -2
+          ]
+        },
+        {
+          "presetId": "platform_disappearing",
+          "position": [
+            -1,
+            -1
+          ]
+        },
+        {
+          "presetId": "platform_stone",
+          "position": [
+            3,
+            0
+          ]
+        },
+        {
+          "presetId": "trap_spikyball",
+          "position": [
+            3,
+            1
+          ]
+        },
+        {
+          "presetId": "platform_stone",
+          "position": [
+            -1,
+            4
+          ]
+        },
+        {
+          "presetId": "item_star",
+          "position": [
+            -1,
+            5
+          ]
+        },
+        {
+          "presetId": "platform_stone",
+          "position": [
+            6,
+            -4
+          ]
+        },
+        {
+          "presetId": "platform_stone",
+          "position": [
+            7,
+            -4
+          ]
+        },
+        {
+          "presetId": "object_bouncyshroom",
+          "position": [
+            7,
+            -3
+          ]
+        },
+        {
+          "presetId": "platform_stone",
+          "position": [
+            12,
+            3
+          ]
+        },
+        {
+          "presetId": "platform_stone",
+          "position": [
+            13,
+            3
+          ]
+        },
+        {
+          "presetId": "enemy_cloud",
+          "position": [
+            12.5,
+            4
+          ]
+        },
+        {
+          "presetId": "item_star",
+          "position": [
+            13,
+            5
+          ]
+        },
+        {
+          "presetId": "platform_stone",
+          "position": [
+            10,
+            -1
+          ]
+        },
+        {
+          "presetId": "platform_stone",
+          "position": [
+            11,
+            -1
+          ]
+        },
+        {
+          "presetId": "trap_spikyball",
+          "position": [
+            10,
+            0
+          ]
+        },
+        {
+          "presetId": "trap_spikyball",
+          "position": [
+            11,
+            0
+          ]
+        },
+        {
+          "presetId": "item_star",
+          "position": [
+            -12,
+            -2
+          ]
+        },
+        {
+          "presetId": "item_star",
+          "position": [
+            3.5,
+            2
+          ]
+        },
+        {
+          "presetId": "item_star",
+          "position": [
+            10.5,
+            1
+          ]
+        }
+      ]
+    }
+  ],
+  "assistant": "정확한 지적입니다! 적을 밟는 동작(OnStomp)과 부딪히는 동작(OnHit)이 동시에 발생할 수 있는 문제를 발견하셨네요. 이전 로직에서는 패배 조건이 먼저 실행되어 적을 밟아도 게임에서 지게 될 수 있었습니다. 말씀하신 대로 Selector 노드를 추가하여 '밟기'가 '부딪히기'보다 항상 먼저 확인되도록 로직의 우선순위를 수정했습니다. 이제 적을 정상적으로 밟아 없앨 수 있습니다."
+}

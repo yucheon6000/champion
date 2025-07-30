@@ -8,6 +8,8 @@ using UnityEngine;
 
 public class Entity : MonoBehaviour
 {
+    private string presetId;
+
     [Header("Read Only!")]
     [SerializeField]
     private List<string> tags = new List<string>();
@@ -15,6 +17,9 @@ public class Entity : MonoBehaviour
 
     // [SerializeField]
     // private List<IComponent> components;
+    [SerializeField]
+    private SpriteRenderer spriteRenderer;
+    private bool hasSprite = false;
 
     [Header("Stats UI")]
     [SerializeField]
@@ -28,6 +33,10 @@ public class Entity : MonoBehaviour
 
     private BehaviorTreeRunner behaviorTreeRunner;
     public BehaviorTreeRunner BehaviorTreeRunner => behaviorTreeRunner;
+
+    private bool willBeDestroyed = false;
+    public bool WillBeDestroyed => willBeDestroyed;
+    private int destroyCallTime = -1;
 
     public JObject ToJson()
     {
@@ -86,8 +95,10 @@ public class Entity : MonoBehaviour
                 }
                 else
                 {
+                    // Create a root node.
                     rootNode.FromJson(rootNodeJson);
 
+                    // Add components to the entity.
                     RequiresBTComponentAttribute[] allRequiredAttrs = rootNode.GetRequiredBTComponents();
 
                     var uniqueComponentTypes = allRequiredAttrs.Select(attr => attr.RequiredComponentType).Distinct();
@@ -97,6 +108,7 @@ public class Entity : MonoBehaviour
                             gameObject.AddComponent(type);
                     }
 
+                    // Create a behavior tree runner.
                     behaviorTreeRunner = new BehaviorTreeRunner(this, rootNode);
                 }
             }
@@ -113,9 +125,14 @@ public class Entity : MonoBehaviour
 
     private void InitAllComponents()
     {
-        // // Initialize all the added components.
-        // foreach (IComponent component in components)
-        //     component.Init(this);
+        if (HasTag("Fixed"))
+            GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezeAll;
+
+        if (HasTag("Gravity"))
+            gameObject.AddComponent<Gravity>();
+
+        if (HasTag("CameraTarget"))
+            gameObject.AddComponent<CameraTarget>().Init(this);
     }
 
     private void InitStatsUI()
@@ -144,6 +161,8 @@ public class Entity : MonoBehaviour
 
     private void Update()
     {
+        InitSpriteRenderer();
+
         // 월드 위치 + 오프셋 → 스크린 위치로 변환
         Vector3 screenPos = Camera.main.WorldToScreenPoint(transform.position);
 
@@ -151,6 +170,45 @@ public class Entity : MonoBehaviour
         statsUIParent.position = screenPos;
 
         BehaviorTreeRunner?.Execute();
+
+        // After 1 frame, destroy the entity.
+        if (willBeDestroyed && Time.frameCount == destroyCallTime + 1)
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    public void SetPresetId(string presetId)
+    {
+        this.presetId = presetId;
+    }
+
+    private void InitSpriteRenderer()
+    {
+        if (hasSprite) return;
+
+        if (spriteRenderer == null)
+            spriteRenderer = GetComponent<SpriteRenderer>();
+
+        if (spriteRenderer == null) return;
+
+        if (PromptManager.Instance == null) return;
+
+        if (!PromptManager.Instance.HasSprite(presetId)) return;
+
+        Sprite sprite = PromptManager.Instance.GetSprite(presetId);
+        if (sprite == null) return;
+
+        spriteRenderer.sprite = sprite;
+        spriteRenderer.color = Color.white;
+
+        hasSprite = true;
+    }
+
+    public void Destroy()
+    {
+        willBeDestroyed = true;
+        destroyCallTime = Time.frameCount;
     }
 
     private void OnDestroy()
