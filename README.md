@@ -4,6 +4,11 @@
 
 이 프로젝트는 **JSON 기반**으로 2D 게임을 정의하고, **Behavior Tree(BT)** 시스템을 통해 엔티티의 동작을 유연하게 제어할 수 있는 게임 엔진입니다. 프로그래머, 디자이너, AI 모두가 협업할 수 있도록 설계되었습니다.
 
+### 시연 영상 (25년 7월 30일 업데이트)
+[![시연영상](https://img.youtube.com/vi/i-PmtaKsXmA/0.jpg)](https://www.youtube.com/watch?v=i-PmtaKsXmA)
+
+- LLM-BT 기반 게임 생성
+- 자동 스프라이트 생성
 
 ## 주요 구조
 
